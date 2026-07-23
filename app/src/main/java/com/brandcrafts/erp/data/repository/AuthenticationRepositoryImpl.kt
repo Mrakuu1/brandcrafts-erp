@@ -8,6 +8,7 @@ import com.brandcrafts.erp.domain.model.AuthenticatedUser
 import com.brandcrafts.erp.domain.repository.AuthenticationRepository
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import javax.inject.Inject
 
 class AuthenticationRepositoryImpl @Inject constructor(private val source: FirebaseAuthenticationDataSource) : AuthenticationRepository {
@@ -21,6 +22,16 @@ class AuthenticationRepositoryImpl @Inject constructor(private val source: Fireb
     } catch (error: Throwable) {
         source.signOut()
         AppResult.Error(error.toAuthenticationError())
+    }
+    override suspend fun resetPassword(email: String): AppResult<Unit> = try {
+        source.sendPasswordReset(email)
+        AppResult.Success(Unit)
+    } catch (error: Throwable) {
+        when (error) {
+            is FirebaseAuthInvalidUserException,
+            is FirebaseAuthInvalidCredentialsException -> AppResult.Success(Unit)
+            else -> AppResult.Error(error.toAuthenticationError())
+        }
     }
     override suspend fun logout(): AppResult<Unit> = try { source.signOut(); AppResult.Success(Unit) } catch (error: Throwable) { AppResult.Error(error.toAuthenticationError()) }
     override suspend fun getCurrentUser(): AppResult<AuthenticatedUser?> = try {

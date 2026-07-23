@@ -11,6 +11,7 @@ import javax.inject.Inject
 
 class FirebaseAuthenticationDataSourceImpl @Inject constructor(private val auth: FirebaseAuth, private val firestore: FirebaseFirestore) : FirebaseAuthenticationDataSource {
     override suspend fun signIn(email: String, password: String): String = auth.signInWithEmailAndPassword(email, password).await().user?.uid ?: error("Missing authenticated user")
+    override suspend fun sendPasswordReset(email: String) { auth.sendPasswordResetEmail(email).await() }
     override suspend fun currentUserId(): String? = auth.currentUser?.uid
     override suspend fun userProfile(uid: String): DocumentSnapshot? = firestore.collection("users").document(uid).get().await().takeIf { it.exists() }
     override fun signOut() = auth.signOut()

@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.brandcrafts.erp.R
 import com.brandcrafts.erp.core.result.AuthenticationError
 import com.brandcrafts.erp.feature.auth.LoginRoute
+import com.brandcrafts.erp.feature.auth.ForgotPasswordRoute
 import com.brandcrafts.erp.feature.dashboard.DashboardRoute
 import com.brandcrafts.erp.feature.dashboard.DashboardUiState
 import com.brandcrafts.erp.ui.CurrentUserProvider
@@ -33,6 +34,7 @@ import com.brandcrafts.erp.ui.components.LoadingView
 import kotlinx.coroutines.launch
 
 private const val LOGIN_ROUTE = "login"
+private const val FORGOT_PASSWORD_ROUTE = "forgot_password"
 private const val MAIN_SHELL_ROUTE = "main_shell"
 
 enum class AppDestination(val route: String, val titleRes: Int) {
@@ -49,6 +51,16 @@ fun AppNavHost(
 ) {
     val state by startupViewModel.uiState.collectAsStateWithLifecycle()
     val currentUser by startupViewModel.currentUser.collectAsStateWithLifecycle()
+    val logoutState by startupViewModel.logoutUiState.collectAsStateWithLifecycle()
+    val logoutErrorMessage = logoutState.error?.let { error ->
+        stringResource(
+            if (error == AuthenticationError.NETWORK_UNAVAILABLE) {
+                R.string.logout_network_error
+            } else {
+                R.string.logout_error
+            },
+        )
+    }
 
     CurrentUserProvider(currentUser = currentUser) {
         when (val startupState = state) {
@@ -63,12 +75,20 @@ fun AppNavHost(
                 startDestination = LOGIN_ROUTE,
                 onSignInSuccess = { startupViewModel.onEvent(StartupUiEvent.LoginSucceeded(it)) },
                 onLogout = { startupViewModel.onEvent(StartupUiEvent.SignOutClicked) },
+                onLogoutConfirmed = { startupViewModel.onEvent(StartupUiEvent.LogoutConfirmed) },
+                isLogoutInProgress = logoutState.isLoading,
+                logoutErrorMessage = logoutErrorMessage,
+                onLogoutErrorShown = { startupViewModel.onEvent(StartupUiEvent.LogoutErrorShown) },
                 modifier = modifier,
             )
             StartupUiState.Authenticated -> AppSessionNavHost(
                 startDestination = MAIN_SHELL_ROUTE,
                 onSignInSuccess = { startupViewModel.onEvent(StartupUiEvent.LoginSucceeded(it)) },
                 onLogout = { startupViewModel.onEvent(StartupUiEvent.SignOutClicked) },
+                onLogoutConfirmed = { startupViewModel.onEvent(StartupUiEvent.LogoutConfirmed) },
+                isLogoutInProgress = logoutState.isLoading,
+                logoutErrorMessage = logoutErrorMessage,
+                onLogoutErrorShown = { startupViewModel.onEvent(StartupUiEvent.LogoutErrorShown) },
                 modifier = modifier,
             )
         }
@@ -80,6 +100,10 @@ private fun AppSessionNavHost(
     startDestination: String,
     onSignInSuccess: (com.brandcrafts.erp.domain.model.AuthenticatedUser) -> Unit,
     onLogout: () -> Unit,
+    onLogoutConfirmed: () -> Unit,
+    isLogoutInProgress: Boolean,
+    logoutErrorMessage: String?,
+    onLogoutErrorShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val navController = rememberNavController()
@@ -96,7 +120,13 @@ private fun AppSessionNavHost(
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         if (startDestination == LOGIN_ROUTE) {
             composable(LOGIN_ROUTE) {
-                LoginRoute(onSignInSuccess = onSignInSuccess, onForgotPasswordClick = {})
+                LoginRoute(
+                    onSignInSuccess = onSignInSuccess,
+                    onForgotPasswordClick = { navController.navigate(FORGOT_PASSWORD_ROUTE) },
+                )
+            }
+            composable(FORGOT_PASSWORD_ROUTE) {
+                ForgotPasswordRoute(onNavigateToLogin = { navController.popBackStack() })
             }
         } else {
             navigation(startDestination = AppDestination.HOME.route, route = MAIN_SHELL_ROUTE) {
@@ -106,7 +136,11 @@ private fun AppSessionNavHost(
                         composable(destination.route) {
                             AppNavigationShell(
                                 navController = navController,
-                                onLogout = onLogout,
+                                onLogout = onLogoutConfirmed,
+                                isLogoutInProgress = isLogoutInProgress,
+                                logoutErrorMessage = logoutErrorMessage,
+                                onLogoutErrorShown = onLogoutErrorShown,
+                                onUnavailableFeature = onUnavailableFeature,
                                 snackbarHostState = snackbarHostState,
                             ) {
                                 if (destination == AppDestination.HOME) {

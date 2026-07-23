@@ -12,4 +12,11 @@ sealed interface StartupUiEvent {
     data class LoginSucceeded(val user: com.brandcrafts.erp.domain.model.AuthenticatedUser) : StartupUiEvent
     data object RetryClicked : StartupUiEvent
     data object SignOutClicked : StartupUiEvent
+    data object LogoutConfirmed : StartupUiEvent
+    data object LogoutErrorShown : StartupUiEvent
 }
+
+data class LogoutUiState(
+    val isLoading: Boolean = false,
+    val error: AuthenticationError? = null,
+)

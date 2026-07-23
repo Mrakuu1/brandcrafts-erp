@@ -69,4 +69,20 @@
     <string name="dashboard_status_in_progress">In progress</string>
     <string name="dashboard_status_completed">Completed</string>
     <string name="dashboard_status_info">Info</string>
+    <string name="role_admin">Administrator</string>
+    <string name="role_employee">Employee</string>
+    <string name="profile_avatar_content_description">Profile for %1$s</string>
+    <string name="logout_confirmation_title">Log out?</string>
+    <string name="logout_confirmation_description">You will need to sign in again to continue.</string>
+    <string name="cancel">Cancel</string>
+    <string name="logout_network_error">Unable to log out while offline. Check your connection and try again.</string>
+    <string name="logout_error">Unable to log out right now. Please try again.</string>
+    <string name="forgot_password_title">Reset your password</string>
+    <string name="forgot_password_description">Enter your work email to receive a password reset link.</string>
+    <string name="forgot_password_submit">Send reset link</string>
+    <string name="forgot_password_return_to_login">Return to sign in</string>
+    <string name="forgot_password_success_title">Check your email</string>
+    <string name="forgot_password_success_description">If an account matches this email, a reset link has been sent.</string>
+    <string name="forgot_password_network_error">Unable to send a reset link. Check your connection and try again.</string>
+    <string name="forgot_password_error">Unable to send a reset link right now. Please try again.</string>
 </resources>

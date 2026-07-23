@@ -23,6 +23,8 @@ class StartupViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<StartupUiState>(StartupUiState.Loading)
     val uiState: StateFlow<StartupUiState> = _uiState.asStateFlow()
+    private val _logoutUiState = MutableStateFlow(LogoutUiState())
+    val logoutUiState: StateFlow<LogoutUiState> = _logoutUiState.asStateFlow()
     val currentUser: StateFlow<CurrentUserState> = sessionManager.currentUser
     private var isSessionCheckInProgress = false
 
@@ -38,6 +40,8 @@ class StartupViewModel @Inject constructor(
             }
             StartupUiEvent.RetryClicked -> validateSession()
             StartupUiEvent.SignOutClicked -> signOut()
+            StartupUiEvent.LogoutConfirmed -> logoutFromProfile()
+            StartupUiEvent.LogoutErrorShown -> _logoutUiState.value = _logoutUiState.value.copy(error = null)
         }
     }
 
@@ -72,6 +76,23 @@ class StartupViewModel @Inject constructor(
         _uiState.value = StartupUiState.Unauthenticated
         viewModelScope.launch {
             logout()
+        }
+    }
+
+    private fun logoutFromProfile() {
+        if (_logoutUiState.value.isLoading) return
+        _logoutUiState.value = LogoutUiState(isLoading = true)
+        viewModelScope.launch {
+            when (val result = logout()) {
+                is AppResult.Success -> {
+                    sessionManager.clearCurrentUser()
+                    _logoutUiState.value = LogoutUiState()
+                    _uiState.value = StartupUiState.Unauthenticated
+                }
+                is AppResult.Error -> {
+                    _logoutUiState.value = LogoutUiState(error = result.error)
+                }
+            }
         }
     }
 }

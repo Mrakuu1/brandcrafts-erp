@@ -8,6 +8,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.tooling.preview.Preview
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 
@@ -26,6 +27,7 @@ fun AppTopBar(
     navigationContentDescription: String? = null,
     onNavigationClick: (() -> Unit)? = null,
     actions: List<TopBarAction> = emptyList(),
+    trailingContent: (@Composable RowScope.() -> Unit)? = null,
 ) {
     TopAppBar(
         modifier = modifier,
@@ -49,6 +51,7 @@ fun AppTopBar(
                     )
                 }
             }
+            trailingContent?.invoke(this)
         },
     )
 }
