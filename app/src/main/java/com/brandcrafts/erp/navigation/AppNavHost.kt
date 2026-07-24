@@ -30,6 +30,7 @@ import com.brandcrafts.erp.feature.dashboard.DashboardRoute
 import com.brandcrafts.erp.feature.dashboard.DashboardUiState
 import com.brandcrafts.erp.feature.inventory.InventoryRoute
 import com.brandcrafts.erp.feature.inventory.InventoryFormRoute
+import com.brandcrafts.erp.feature.inventory.StockInRoute
 import com.brandcrafts.erp.ui.CurrentUserProvider
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
@@ -40,6 +41,7 @@ private const val FORGOT_PASSWORD_ROUTE = "forgot_password"
 private const val MAIN_SHELL_ROUTE = "main_shell"
 private const val INVENTORY_CREATE_ROUTE = "inventory/create"
 private const val INVENTORY_EDIT_ROUTE = "inventory/edit/{itemId}"
+private const val STOCK_IN_ROUTE = "stock/in/{materialId}"
 
 enum class AppDestination(val route: String, val titleRes: Int) {
     HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
@@ -122,6 +124,7 @@ private fun AppSessionNavHost(
     }
     val dashboardUiState = remember { DashboardUiState.Loaded() }
     val inventorySavedMessage = stringResource(R.string.inventory_form_save_success)
+    val stockInSavedMessage = stringResource(R.string.stock_in_success)
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         if (startDestination == LOGIN_ROUTE) {
             composable(LOGIN_ROUTE) {
@@ -164,6 +167,7 @@ private fun AppSessionNavHost(
                                         onItemDetailsClick = { onUnavailableFeature() },
                                         onCreateItemClick = { navController.navigate(INVENTORY_CREATE_ROUTE) },
                                         onEditItemClick = { itemId -> navController.navigate("inventory/edit/$itemId") },
+                                        onStockInClick = { itemId -> navController.navigate("stock/in/$itemId") },
                                         onShowMessage = { message -> snackbarHostState.showSnackbar(message) },
                                     )
                                     else -> PlaceholderScreen(title = stringResource(destination.titleRes))
@@ -205,6 +209,21 @@ private fun AppSessionNavHost(
                             onItemSaved = {
                                 navController.popBackStack()
                                 coroutineScope.launch { snackbarHostState.showSnackbar(inventorySavedMessage) }
+                            },
+                        )
+                    }
+                }
+                composable(STOCK_IN_ROUTE) {
+                    AppNavigationShell(
+                        navController = navController, onLogout = onLogoutConfirmed, isLogoutInProgress = isLogoutInProgress,
+                        logoutErrorMessage = logoutErrorMessage, onLogoutErrorShown = onLogoutErrorShown,
+                        onUnavailableFeature = onUnavailableFeature, snackbarHostState = snackbarHostState,
+                    ) {
+                        StockInRoute(
+                            onNavigateBack = { navController.popBackStack() },
+                            onSaved = {
+                                navController.popBackStack()
+                                coroutineScope.launch { snackbarHostState.showSnackbar(stockInSavedMessage) }
                             },
                         )
                     }

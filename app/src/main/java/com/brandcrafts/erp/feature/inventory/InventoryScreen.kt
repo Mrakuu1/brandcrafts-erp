@@ -93,7 +93,8 @@ private fun InventoryListContent(
                     InventoryItemCard(
                         item = item,
                         showFinancialFields = isAdmin,
-                        onClick = { onEvent(InventoryUiEvent.ItemClicked(item.id)) },
+                    onClick = { onEvent(InventoryUiEvent.ItemClicked(item.id)) },
+                    onStockInClick = { onEvent(InventoryUiEvent.StockInClicked(item.id)) },
                         onEditClick = if (isAdmin) {
                             { onEvent(InventoryUiEvent.EditItemClicked(item.id)) }
                         } else {
@@ -197,6 +198,7 @@ private fun InventoryItemCard(
     item: InventoryListItem,
     showFinancialFields: Boolean,
     onClick: () -> Unit,
+    onStockInClick: () -> Unit,
     onEditClick: (() -> Unit)?,
 ) {
     Card(
@@ -247,6 +249,9 @@ private fun InventoryItemCard(
                             label = stringResource(R.string.inventory_status_inactive),
                             tone = StatusTone.NEUTRAL,
                         )
+                    }
+                    androidx.compose.material3.TextButton(onClick = onStockInClick) {
+                        Text(stringResource(R.string.stock_in_title))
                     }
                     onEditClick?.let { action ->
                         IconButton(onClick = action) {

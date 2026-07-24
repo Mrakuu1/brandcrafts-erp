@@ -135,4 +135,20 @@
     <string name="inventory_form_error_not_found">This material is no longer available.</string>
     <string name="inventory_form_error_unknown">Unable to save the material right now. Please try again.</string>
     <string name="inventory_form_save_success">Inventory item saved.</string>
+    <string name="stock_in_title">Stock in</string>
+    <string name="stock_in_loading">Loading materialâ€¦</string>
+    <string name="stock_in_save">Record stock in</string>
+    <string name="stock_in_material">Material</string>
+    <string name="stock_in_quantity">Received quantity</string>
+    <string name="stock_in_reference">Reference number (optional)</string>
+    <string name="stock_in_remarks">Remarks</string>
+    <string name="stock_in_error_title">Unable to record stock in</string>
+    <string name="stock_in_error_material">This material is unavailable.</string>
+    <string name="stock_in_error_inactive">This material is inactive.</string>
+    <string name="stock_in_error_unauthorized">You are not allowed to record stock in.</string>
+    <string name="stock_in_error_validation">Check the stock in details and try again.</string>
+    <string name="stock_in_error_network">Check your connection and try again.</string>
+    <string name="stock_in_error_unknown">Unable to record stock in right now. Please try again.</string>
+    <string name="stock_in_quantity_invalid">Enter a quantity greater than zero.</string>
+    <string name="stock_in_success">Stock in recorded successfully.</string>
 </resources>
