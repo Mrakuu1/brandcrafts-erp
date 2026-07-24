@@ -28,6 +28,9 @@ import com.brandcrafts.erp.feature.auth.LoginRoute
 import com.brandcrafts.erp.feature.auth.ForgotPasswordRoute
 import com.brandcrafts.erp.feature.dashboard.DashboardRoute
 import com.brandcrafts.erp.feature.dashboard.DashboardUiState
+import com.brandcrafts.erp.feature.contacts.ContactsRoute
+import com.brandcrafts.erp.feature.contacts.ContactFormMode
+import com.brandcrafts.erp.feature.contacts.ContactFormRoute
 import com.brandcrafts.erp.feature.inventory.InventoryRoute
 import com.brandcrafts.erp.feature.inventory.InventoryFormRoute
 import com.brandcrafts.erp.feature.inventory.StockInRoute
@@ -44,6 +47,10 @@ private const val INVENTORY_CREATE_ROUTE = "inventory/create"
 private const val INVENTORY_EDIT_ROUTE = "inventory/edit/{itemId}"
 private const val STOCK_IN_ROUTE = "stock/in/{materialId}"
 private const val STOCK_OUT_ROUTE = "stock/out/{materialId}"
+private const val CONTACT_FORM_ROUTE = "contacts/form/{mode}/{contactId}/{contactType}"
+private const val CONTACT_CREATE_CUSTOMER_ROUTE = "contacts/form/create/_/customer"
+private const val CONTACT_CREATE_SUPPLIER_ROUTE = "contacts/form/create/_/supplier"
+private const val CONTACT_EDIT_ROUTE = "contacts/form/edit/{contactId}/_"
 
 enum class AppDestination(val route: String, val titleRes: Int) {
     HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
@@ -128,6 +135,8 @@ private fun AppSessionNavHost(
     val inventorySavedMessage = stringResource(R.string.inventory_form_save_success)
     val stockInSavedMessage = stringResource(R.string.stock_in_success)
     val stockOutSavedMessage = stringResource(R.string.stock_out_success)
+    val contactCreatedMessage = stringResource(R.string.contact_form_create_success)
+    val contactUpdatedMessage = stringResource(R.string.contact_form_update_success)
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         if (startDestination == LOGIN_ROUTE) {
             composable(LOGIN_ROUTE) {
@@ -173,6 +182,12 @@ private fun AppSessionNavHost(
                                         onStockInClick = { itemId -> navController.navigate("stock/in/$itemId") },
                                         onStockOutClick = { itemId -> navController.navigate("stock/out/$itemId") },
                                         onShowMessage = { message -> snackbarHostState.showSnackbar(message) },
+                                    )
+                                    AppDestination.CONTACTS -> ContactsRoute(
+                                        onAddCustomerClick = { navController.navigate(CONTACT_CREATE_CUSTOMER_ROUTE) },
+                                        onAddSupplierClick = { navController.navigate(CONTACT_CREATE_SUPPLIER_ROUTE) },
+                                        onEditCustomerClick = { id -> navController.navigate(contactEditRoute(id)) },
+                                        onEditSupplierClick = { id -> navController.navigate(contactEditRoute(id)) },
                                     )
                                     else -> PlaceholderScreen(title = stringResource(destination.titleRes))
                                 }
@@ -233,10 +248,36 @@ private fun AppSessionNavHost(
                     }
                 }
                 composable(STOCK_OUT_ROUTE) { AppNavigationShell(navController,onLogoutConfirmed,isLogoutInProgress,logoutErrorMessage,onLogoutErrorShown,onUnavailableFeature,snackbarHostState) { StockOutRoute(back = { navController.popBackStack() }, saved = { navController.popBackStack(); coroutineScope.launch { snackbarHostState.showSnackbar(stockOutSavedMessage) } }) } }
+                composable(CONTACT_FORM_ROUTE) {
+                    AppNavigationShell(
+                        navController = navController,
+                        onLogout = onLogoutConfirmed,
+                        isLogoutInProgress = isLogoutInProgress,
+                        logoutErrorMessage = logoutErrorMessage,
+                        onLogoutErrorShown = onLogoutErrorShown,
+                        onUnavailableFeature = onUnavailableFeature,
+                        snackbarHostState = snackbarHostState,
+                    ) {
+                        ContactFormRoute(
+                            onNavigateBack = { navController.popBackStack() },
+                            onContactSaved = { mode ->
+                                navController.popBackStack()
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (mode == ContactFormMode.CREATE) contactCreatedMessage else contactUpdatedMessage,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
             }
         }
     }
 }
+
+private fun contactEditRoute(contactId: String): String =
+    CONTACT_EDIT_ROUTE.replace("{contactId}", contactId)
 
 @Composable
 private fun StartupLoading(modifier: Modifier) {

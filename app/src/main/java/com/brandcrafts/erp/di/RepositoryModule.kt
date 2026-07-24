@@ -2,6 +2,8 @@ package com.brandcrafts.erp.di
 
 import com.brandcrafts.erp.data.datasource.auth.FirebaseAuthenticationDataSource
 import com.brandcrafts.erp.data.datasource.auth.FirebaseAuthenticationDataSourceImpl
+import com.brandcrafts.erp.data.datasource.contact.ContactsRemoteDataSource
+import com.brandcrafts.erp.data.datasource.contact.FirestoreContactsRemoteDataSource
 import com.brandcrafts.erp.data.datasource.inventory.FirestoreInventoryRemoteDataSource
 import com.brandcrafts.erp.data.datasource.inventory.InventoryRemoteDataSource
 import com.brandcrafts.erp.data.datasource.stock.FirestoreStockRemoteDataSource
@@ -9,12 +11,14 @@ import com.brandcrafts.erp.data.datasource.stock.StockRemoteDataSource
 import com.brandcrafts.erp.data.datasource.stock.FirestoreStockOutRemoteDataSource
 import com.brandcrafts.erp.data.datasource.stock.StockOutRemoteDataSource
 import com.brandcrafts.erp.data.repository.AuthenticationRepositoryImpl
+import com.brandcrafts.erp.data.repository.ContactRepositoryImpl
 import com.brandcrafts.erp.data.repository.InventoryRepositoryImpl
 import com.brandcrafts.erp.data.repository.StockRepositoryImpl
 import com.brandcrafts.erp.data.repository.StockOutRepositoryImpl
 import com.brandcrafts.erp.data.repository.MaterialUsageRepositoryImpl
 import com.brandcrafts.erp.data.repository.InventoryTransactionRepositoryImpl
 import com.brandcrafts.erp.domain.repository.AuthenticationRepository
+import com.brandcrafts.erp.domain.repository.ContactRepository
 import com.brandcrafts.erp.domain.repository.InventoryRepository
 import com.brandcrafts.erp.domain.repository.StockRepository
 import com.brandcrafts.erp.domain.repository.StockOutRepository
@@ -38,4 +42,6 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindStockOutRepository(impl: StockOutRepositoryImpl): StockOutRepository
     @Binds @Singleton abstract fun bindMaterialUsageRepository(impl: MaterialUsageRepositoryImpl): MaterialUsageRepository
     @Binds @Singleton abstract fun bindInventoryTransactionRepository(impl: InventoryTransactionRepositoryImpl): InventoryTransactionRepository
+    @Binds @Singleton abstract fun bindContactsRemoteDataSource(impl: FirestoreContactsRemoteDataSource): ContactsRemoteDataSource
+    @Binds @Singleton abstract fun bindContactRepository(impl: ContactRepositoryImpl): ContactRepository
 }

@@ -298,11 +298,8 @@ Employee
 
 View
 
-Create
-
-Edit
-
-Delete Hidden
+Supplier actions are view-only. Create, edit, and delete actions are hidden in the UI and
+must be rejected outside the UI boundary.
 
 ---
 
@@ -522,8 +519,8 @@ Hide completely.
 | Customers | Create | ✅ | ✅ |
 | Customers | Edit | ✅ | ✅ |
 | Customers | Delete | ✅ | ❌ |
-| Suppliers | Create | ✅ | ✅ |
-| Suppliers | Edit | ✅ | ✅ |
+| Suppliers | Create | ✅ | ❌ |
+| Suppliers | Edit | ✅ | ❌ |
 | Suppliers | Delete | ✅ | ❌ |
 | Quotations | Create | ✅ | ✅ |
 | Quotations | Edit | ✅ | ✅ |

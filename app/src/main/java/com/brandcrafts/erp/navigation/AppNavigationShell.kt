@@ -42,7 +42,11 @@ fun AppNavigationShell(
     val role = user.role
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route ?: AppDestination.HOME.route
-    val selectedRoute = if (currentRoute.startsWith("inventory/") || currentRoute.startsWith("stock/")) AppDestination.STOCK.route else currentRoute
+    val selectedRoute = when {
+        currentRoute.startsWith("inventory/") || currentRoute.startsWith("stock/") -> AppDestination.STOCK.route
+        currentRoute.startsWith("contacts/") -> AppDestination.CONTACTS.route
+        else -> currentRoute
+    }
     var profileExpanded by remember { mutableStateOf(false) }
     var showLogoutConfirmation by remember { mutableStateOf(false) }
     val destinations = listOf(AppDestination.HOME, AppDestination.STOCK, AppDestination.ORDERS, AppDestination.CONTACTS)
