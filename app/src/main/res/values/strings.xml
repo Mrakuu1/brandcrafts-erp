@@ -151,4 +151,16 @@
     <string name="stock_in_error_unknown">Unable to record stock in right now. Please try again.</string>
     <string name="stock_in_quantity_invalid">Enter a quantity greater than zero.</string>
     <string name="stock_in_success">Stock in recorded successfully.</string>
+    <string name="stock_out_title">Stock out</string><string name="stock_out_loading">Loading materialâ€¦</string><string name="stock_out_save">Record stock out</string><string name="stock_out_material">Material</string><string name="stock_out_quantity">Issued quantity</string><string name="stock_out_reason">Reason</string><string name="stock_out_remarks">Remarks</string><string name="stock_out_error_title">Unable to record stock out</string><string name="stock_out_error_material">This material is unavailable.</string><string name="stock_out_error_inactive">This material is inactive.</string><string name="stock_out_error_insufficient">Insufficient stock is available for this request.</string><string name="stock_out_error_unauthorized">You are not allowed to record stock out.</string><string name="stock_out_error_network">Check your connection and try again.</string><string name="stock_out_error_unknown">Unable to record stock out right now. Please try again.</string><string name="stock_out_reason_required">Enter a reason for this stock out.</string><string name="stock_out_quantity_invalid">Enter a quantity greater than zero.</string><string name="stock_out_success">Stock out recorded successfully.</string>
+    <string name="material_usage_title">Material usage</string>
+    <string name="recent_transactions">Recent transactions</string>
+    <string name="transactions_loading">Loading transactions…</string>
+    <string name="no_recent_transactions">No recent transactions</string>
+    <string name="no_recent_transactions_description">Transactions for this material will appear here.</string>
+    <string name="transactions_error">Unable to load transactions</string>
+    <string name="transactions_error_description">Check your connection and try again.</string>
+    <string name="transaction_reference">Reference: %1$s</string>
+    <string name="transaction_remarks">Remarks: %1$s</string>
+    <string name="transaction_you">You</string>
+    <string name="transaction_team_member">Team member</string>
 </resources>

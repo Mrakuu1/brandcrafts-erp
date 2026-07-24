@@ -20,6 +20,7 @@ fun InventoryRoute(
     onCreateItemClick: () -> Unit,
     onEditItemClick: (String) -> Unit,
     onStockInClick: (String) -> Unit,
+    onStockOutClick: (String) -> Unit,
     onShowMessage: suspend (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InventoryViewModel = hiltViewModel(),
@@ -34,6 +35,7 @@ fun InventoryRoute(
                 is InventoryUiEffect.NavigateToItemDetails -> onItemDetailsClick(effect.itemId)
                 is InventoryUiEffect.NavigateToEditItem -> onEditItemClick(effect.itemId)
                 is InventoryUiEffect.NavigateToStockIn -> onStockInClick(effect.itemId)
+                is InventoryUiEffect.NavigateToStockOut -> onStockOutClick(effect.itemId)
                 InventoryUiEffect.NavigateToCreateItem -> onCreateItemClick()
                 is InventoryUiEffect.ShowMessage -> onShowMessage(context.getString(effect.messageRes))
             }

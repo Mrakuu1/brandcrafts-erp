@@ -43,6 +43,7 @@ class InventoryViewModel @Inject constructor(
             is InventoryUiEvent.ItemClicked -> sendEffect(InventoryUiEffect.NavigateToItemDetails(event.itemId))
             is InventoryUiEvent.EditItemClicked -> sendEffect(InventoryUiEffect.NavigateToEditItem(event.itemId))
             is InventoryUiEvent.StockInClicked -> sendEffect(InventoryUiEffect.NavigateToStockIn(event.itemId))
+            is InventoryUiEvent.StockOutClicked -> sendEffect(InventoryUiEffect.NavigateToStockOut(event.itemId))
             InventoryUiEvent.AddItemClicked -> sendEffect(InventoryUiEffect.NavigateToCreateItem)
             InventoryUiEvent.FilterClicked -> sendEffect(InventoryUiEffect.ShowMessage(R.string.feature_coming_later))
             InventoryUiEvent.RetryClicked -> observeItems()
