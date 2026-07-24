@@ -42,6 +42,7 @@ fun AppNavigationShell(
     val role = user.role
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route ?: AppDestination.HOME.route
+    val selectedRoute = if (currentRoute.startsWith("inventory/")) AppDestination.STOCK.route else currentRoute
     var profileExpanded by remember { mutableStateOf(false) }
     var showLogoutConfirmation by remember { mutableStateOf(false) }
     val destinations = listOf(AppDestination.HOME, AppDestination.STOCK, AppDestination.ORDERS, AppDestination.CONTACTS)
@@ -51,7 +52,13 @@ fun AppNavigationShell(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = stringResource(destinations.firstOrNull { it.route == currentRoute }?.titleRes ?: R.string.profile),
+                title = stringResource(
+                    if (selectedRoute == AppDestination.STOCK.route) {
+                        R.string.inventory_title
+                    } else {
+                        destinations.firstOrNull { it.route == selectedRoute }?.titleRes ?: R.string.profile
+                    },
+                ),
                 trailingContent = {
                     Box {
                         IconButton(onClick = { profileExpanded = true }) {
@@ -83,7 +90,7 @@ fun AppNavigationShell(
                 },
             )
         },
-        bottomBar = { BottomNavigationBar(items, currentRoute, onItemSelected = { navController.navigate(it.id) }) },
+        bottomBar = { BottomNavigationBar(items, selectedRoute, onItemSelected = { navController.navigate(it.id) }) },
     ) { padding -> androidx.compose.foundation.layout.Box(Modifier.padding(padding)) { content() } }
     if (showLogoutConfirmation) {
         ConfirmationDialog(
