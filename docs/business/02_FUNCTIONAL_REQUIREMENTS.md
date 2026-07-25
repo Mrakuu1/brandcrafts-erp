@@ -317,6 +317,19 @@ View Only
 
 # Quotation Module
 
+## Approved Calculation and Access Rules
+
+Discount and tax are percentage values. Every monetary, percentage, and quantity value uses
+decimal arithmetic. For each line, calculate subtotal, then discount, then taxable amount,
+then tax; round each calculated monetary value to scale 2 with HALF_UP. Document totals are
+the sums of rounded line values. New quotations are DRAFT; only DRAFT quotations may be edited.
+Quotation creation and financial editing are Administrator-only.
+
+Quotation line items persist percentage inputs and calculated decimal-string values using
+`discountPercent`, `taxPercent`, `lineSubtotal`, `lineDiscount`, `taxableAmount`, `lineTax`,
+`lineTotal`, and integer `sortOrder`. Legacy `discount`, `tax`, and `total` item fields are
+obsolete for new quotation documents.
+
 Purpose
 
 Generate customer quotations.

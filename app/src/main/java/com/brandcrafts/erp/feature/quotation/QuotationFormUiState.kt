@@ -1,0 +1,10 @@
+package com.brandcrafts.erp.feature.quotation
+import com.brandcrafts.erp.domain.model.QuotationStatus
+import com.brandcrafts.erp.domain.usecase.quotation.QuotationTotals
+import java.math.BigDecimal
+data class QuotationFormUiState(val mode:QuotationFormMode=QuotationFormMode.CREATE,val quotationId:String?=null,val loadedStatus:QuotationStatus?=null,val loading:Boolean=true,val saving:Boolean=false,val customerOptions:List<QuotationCustomerOption> = emptyList(),val inventoryOptions:List<QuotationInventoryOption> = emptyList(),val customerId:String?=null,val validUntilMillis:Long?=null,val lines:List<EditableQuotationLine> = listOf(EditableQuotationLine()),val notes:String="",val totals:QuotationTotals?=null,val blocked:Boolean=false,val error:QuotationFormError?=null,val customerError:QuotationFieldError?=null,val validUntilError:QuotationFieldError?=null){val saveEnabled:Boolean get()=!loading&&!saving&&!blocked&&customerId!=null&&lines.isNotEmpty()&&lines.all{it.isValid}}
+data class QuotationCustomerOption(val id:String,val label:String)
+data class QuotationInventoryOption(val id:String,val name:String,val unit:String)
+data class EditableQuotationLine(val localId:String=java.util.UUID.randomUUID().toString(),val lineId:String?=null,val materialId:String?=null,val description:String="",val unit:String="",val quantity:String="",val unitPrice:String="",val discountPercent:String="",val taxPercent:String="",val subtotal:BigDecimal?=null,val discount:BigDecimal?=null,val taxable:BigDecimal?=null,val tax:BigDecimal?=null,val total:BigDecimal?=null,val inventoryError:QuotationFieldError?=null,val quantityError:QuotationFieldError?=null,val unitPriceError:QuotationFieldError?=null,val discountError:QuotationFieldError?=null,val taxError:QuotationFieldError?=null){val isValid:Boolean get()=materialId!=null&&inventoryError==null&&quantityError==null&&unitPriceError==null&&discountError==null&&taxError==null&&total!=null}
+enum class QuotationFormError{UNAUTHORIZED,NON_DRAFT,VALIDATION,LOAD,SAVE}
+enum class QuotationFieldError{REQUIRED,MALFORMED,OUT_OF_RANGE}

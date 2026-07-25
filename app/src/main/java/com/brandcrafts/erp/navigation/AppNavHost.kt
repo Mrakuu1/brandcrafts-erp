@@ -31,6 +31,11 @@ import com.brandcrafts.erp.feature.dashboard.DashboardUiState
 import com.brandcrafts.erp.feature.contacts.ContactsRoute
 import com.brandcrafts.erp.feature.contacts.ContactFormMode
 import com.brandcrafts.erp.feature.contacts.ContactFormRoute
+import com.brandcrafts.erp.feature.employee.EmployeeManagementRoute
+import com.brandcrafts.erp.feature.quotation.QuotationRoute
+import com.brandcrafts.erp.feature.quotation.QuotationFormRoute
+import com.brandcrafts.erp.feature.employee.EmployeeFormMode
+import com.brandcrafts.erp.feature.employee.EmployeeFormRoute
 import com.brandcrafts.erp.feature.inventory.InventoryRoute
 import com.brandcrafts.erp.feature.inventory.InventoryFormRoute
 import com.brandcrafts.erp.feature.inventory.StockInRoute
@@ -51,6 +56,11 @@ private const val CONTACT_FORM_ROUTE = "contacts/form/{mode}/{contactId}/{contac
 private const val CONTACT_CREATE_CUSTOMER_ROUTE = "contacts/form/create/_/customer"
 private const val CONTACT_CREATE_SUPPLIER_ROUTE = "contacts/form/create/_/supplier"
 private const val CONTACT_EDIT_ROUTE = "contacts/form/edit/{contactId}/_"
+private const val EMPLOYEE_FORM_ROUTE = "employees/form/{mode}/{employeeId}"
+private const val EMPLOYEE_CREATE_ROUTE = "employees/form/create/_"
+private const val EMPLOYEE_EDIT_ROUTE = "employees/form/edit/{employeeId}"
+private const val QUOTATION_CREATE_ROUTE = "quotation/create"
+private const val QUOTATION_EDIT_ROUTE = "quotation/edit/{quotationId}"
 
 enum class AppDestination(val route: String, val titleRes: Int) {
     HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
@@ -137,6 +147,13 @@ private fun AppSessionNavHost(
     val stockOutSavedMessage = stringResource(R.string.stock_out_success)
     val contactCreatedMessage = stringResource(R.string.contact_form_create_success)
     val contactUpdatedMessage = stringResource(R.string.contact_form_update_success)
+    val employeeCreatedMessage = stringResource(R.string.employee_form_create_success)
+    val employeeUpdatedMessage = stringResource(R.string.employee_form_update_success)
+    val quotationCreatedMessage = stringResource(R.string.quotation_form_create_success)
+    val quotationUpdatedMessage = stringResource(R.string.quotation_form_update_success)
+    val quotationUnauthorizedMessage = stringResource(R.string.quotation_form_unauthorized_description)
+    val quotationBlockedMessage = stringResource(R.string.quotation_form_edit_unavailable_description)
+    val onEmployeeManagement = { navController.navigate(AppDestination.EMPLOYEES.route) }
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         if (startDestination == LOGIN_ROUTE) {
             composable(LOGIN_ROUTE) {
@@ -162,6 +179,7 @@ private fun AppSessionNavHost(
                                 onLogoutErrorShown = onLogoutErrorShown,
                                 onUnavailableFeature = onUnavailableFeature,
                                 snackbarHostState = snackbarHostState,
+                                onEmployeeManagement = onEmployeeManagement,
                             ) {
                                 when (destination) {
                                     AppDestination.HOME -> DashboardRoute(
@@ -169,7 +187,7 @@ private fun AppSessionNavHost(
                                         onAddStockClick = onUnavailableFeature,
                                         onInvoiceClick = onUnavailableFeature,
                                         onQuotationClick = onUnavailableFeature,
-                                        onEmployeeManagementClick = onUnavailableFeature,
+                                        onEmployeeManagementClick = onEmployeeManagement,
                                         onStockInClick = onUnavailableFeature,
                                         onStockOutClick = onUnavailableFeature,
                                         onMaterialUsageClick = onUnavailableFeature,
@@ -188,6 +206,10 @@ private fun AppSessionNavHost(
                                         onAddSupplierClick = { navController.navigate(CONTACT_CREATE_SUPPLIER_ROUTE) },
                                         onEditCustomerClick = { id -> navController.navigate(contactEditRoute(id)) },
                                         onEditSupplierClick = { id -> navController.navigate(contactEditRoute(id)) },
+                                    )
+                                    AppDestination.ORDERS -> QuotationRoute(
+                                        onCreateQuotation = { navController.navigate(QUOTATION_CREATE_ROUTE) },
+                                        onEditQuotation = { quotationId -> navController.navigate(quotationEditRoute(quotationId)) },
                                     )
                                     else -> PlaceholderScreen(title = stringResource(destination.titleRes))
                                 }
@@ -248,6 +270,51 @@ private fun AppSessionNavHost(
                     }
                 }
                 composable(STOCK_OUT_ROUTE) { AppNavigationShell(navController,onLogoutConfirmed,isLogoutInProgress,logoutErrorMessage,onLogoutErrorShown,onUnavailableFeature,snackbarHostState) { StockOutRoute(back = { navController.popBackStack() }, saved = { navController.popBackStack(); coroutineScope.launch { snackbarHostState.showSnackbar(stockOutSavedMessage) } }) } }
+                composable(AppDestination.EMPLOYEES.route) {
+                    AppNavigationShell(
+                        navController = navController,
+                        onLogout = onLogoutConfirmed,
+                        isLogoutInProgress = isLogoutInProgress,
+                        logoutErrorMessage = logoutErrorMessage,
+                        onLogoutErrorShown = onLogoutErrorShown,
+                        onUnavailableFeature = onUnavailableFeature,
+                        snackbarHostState = snackbarHostState,
+                        onEmployeeManagement = onEmployeeManagement,
+                    ) {
+                        EmployeeManagementRoute(
+                            onUnauthorized = { message ->
+                                navController.popBackStack()
+                                coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                            },
+                            onCreateEmployee = { navController.navigate(EMPLOYEE_CREATE_ROUTE) },
+                            onEditEmployee = { uid -> navController.navigate(employeeEditRoute(uid)) },
+                        )
+                    }
+                }
+                composable(EMPLOYEE_FORM_ROUTE) {
+                    AppNavigationShell(
+                        navController = navController,
+                        onLogout = onLogoutConfirmed,
+                        isLogoutInProgress = isLogoutInProgress,
+                        logoutErrorMessage = logoutErrorMessage,
+                        onLogoutErrorShown = onLogoutErrorShown,
+                        onUnavailableFeature = onUnavailableFeature,
+                        snackbarHostState = snackbarHostState,
+                        onEmployeeManagement = onEmployeeManagement,
+                    ) {
+                        EmployeeFormRoute(
+                            onNavigateBack = { navController.popBackStack() },
+                            onEmployeeSaved = { mode ->
+                                navController.popBackStack()
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (mode == EmployeeFormMode.CREATE) employeeCreatedMessage else employeeUpdatedMessage,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
                 composable(CONTACT_FORM_ROUTE) {
                     AppNavigationShell(
                         navController = navController,
@@ -271,6 +338,40 @@ private fun AppSessionNavHost(
                         )
                     }
                 }
+                composable(QUOTATION_CREATE_ROUTE) {
+                    QuotationFormRoute(
+                        onSaved = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(quotationCreatedMessage) }
+                        },
+                        onNavigateBack = { navController.popBackStack() },
+                        onUnauthorized = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(quotationUnauthorizedMessage) }
+                        },
+                        onEditingBlocked = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(quotationBlockedMessage) }
+                        },
+                    )
+                }
+                composable(QUOTATION_EDIT_ROUTE) {
+                    QuotationFormRoute(
+                        onSaved = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(quotationUpdatedMessage) }
+                        },
+                        onNavigateBack = { navController.popBackStack() },
+                        onUnauthorized = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(quotationUnauthorizedMessage) }
+                        },
+                        onEditingBlocked = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(quotationBlockedMessage) }
+                        },
+                    )
+                }
             }
         }
     }
@@ -278,6 +379,12 @@ private fun AppSessionNavHost(
 
 private fun contactEditRoute(contactId: String): String =
     CONTACT_EDIT_ROUTE.replace("{contactId}", contactId)
+
+private fun employeeEditRoute(employeeId: String): String =
+    EMPLOYEE_EDIT_ROUTE.replace("{employeeId}", employeeId)
+
+private fun quotationEditRoute(quotationId: String): String =
+    QUOTATION_EDIT_ROUTE.replace("{quotationId}", quotationId)
 
 @Composable
 private fun StartupLoading(modifier: Modifier) {

@@ -550,6 +550,32 @@ No repository should directly depend on UI components.
 
 # Future Expansion
 
+## Secure Employee Management Callables
+
+Employee account creation and profile updates use Firebase Callable Cloud Functions. Android
+clients must never create Firebase Authentication users directly.
+
+`createEmployee` accepts only `name`, `email`, `phone`, `role` (`ADMIN` or `EMPLOYEE`),
+`active`, and a temporary password. It derives the caller UID and audit identity from the
+authenticated callable context, verifies an active Admin `/users/{uid}` profile, validates
+required data and uniqueness, creates the Auth user, creates the documented profile with
+`firstLogin`, server timestamps, and audit fields, then creates an immutable activity log.
+If the profile/audit transaction fails after Auth creation, the function deletes the new Auth
+account. Its response contains only `uid`, `name`, `email`, `phone`, `role`, `active`, and
+`firstLogin`.
+
+`updateEmployee` accepts only `uid`, `name`, `email`, `phone`, `role`, and `active`. It
+requires an active Admin, loads the target profile, rejects self-deactivation and
+self-demotion, preserves immutable creation fields, validates uniqueness, updates the
+Firebase Auth profile and documented Firestore fields, and writes an immutable audit event.
+It attempts to restore a changed Auth email if the profile update fails.
+
+Both functions use safe callable error codes: `unauthenticated`, `permission-denied`,
+`invalid-argument`, `already-exists`, `not-found`, and `internal`. Android calls them only
+through the Employee repository and maps errors before presentation. Deploy from
+`functions/` with `firebase deploy --only functions`; local verification uses the Auth,
+Firestore, and Functions emulators defined in `firebase.json`.
+
 Repository interfaces should remain stable.
 
 Changing implementations must not affect ViewModels.

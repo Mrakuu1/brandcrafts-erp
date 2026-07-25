@@ -279,6 +279,10 @@ type
 
 # Collection: documents
 
+Quotation decimal fields (`subTotal`, `discount`, `tax`, `grandTotal`, and item quantity,
+unitPrice, discount, tax, and total) are stored as canonical plain decimal strings for
+QUOTATION documents. They are mapped to BigDecimal only in the data layer; never through Double.
+
 Stores all business documents.
 
 Supported Types
@@ -309,13 +313,15 @@ date : Timestamp
 
 status : String
 
-subTotal : Double
+subtotal : Decimal String
 
-discount : Double
+discountTotal : Decimal String
 
-tax : Double
+taxableTotal : Decimal String
 
-grandTotal : Double
+taxTotal : Decimal String
+
+grandTotal : Decimal String
 
 remarks : String
 
@@ -351,17 +357,27 @@ materialId : String
 
 description : String
 
-quantity : Double
+quantity : Decimal String
 
 unit : String
 
-unitPrice : Double
+unitPrice : Decimal String
 
-discount : Double
+discountPercent : Decimal String
 
-tax : Double
+taxPercent : Decimal String
 
-total : Double
+lineSubtotal : Decimal String
+
+lineDiscount : Decimal String
+
+taxableAmount : Decimal String
+
+lineTax : Decimal String
+
+lineTotal : Decimal String
+
+sortOrder : Integer
 
 ---
 

@@ -8,6 +8,7 @@ import com.brandcrafts.erp.core.result.AuthenticationError
 import com.brandcrafts.erp.core.result.AppResult
 import com.brandcrafts.erp.domain.usecase.GetCurrentUserUseCase
 import com.brandcrafts.erp.domain.usecase.LogoutUseCase
+import com.brandcrafts.erp.domain.usecase.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 class StartupViewModel @Inject constructor(
     private val getCurrentUser: GetCurrentUserUseCase,
     private val logout: LogoutUseCase,
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<StartupUiState>(StartupUiState.Loading)
@@ -27,6 +29,7 @@ class StartupViewModel @Inject constructor(
     val logoutUiState: StateFlow<LogoutUiState> = _logoutUiState.asStateFlow()
     val currentUser: StateFlow<CurrentUserState> = sessionManager.currentUser
     private var isSessionCheckInProgress = false
+    private var sessionObservationJob: kotlinx.coroutines.Job? = null
 
     init {
         validateSession()
@@ -37,6 +40,7 @@ class StartupViewModel @Inject constructor(
             is StartupUiEvent.LoginSucceeded -> {
                 sessionManager.setCurrentUser(event.user)
                 _uiState.value = StartupUiState.Authenticated
+                observeSession()
             }
             StartupUiEvent.RetryClicked -> validateSession()
             StartupUiEvent.SignOutClicked -> signOut()
@@ -53,6 +57,7 @@ class StartupViewModel @Inject constructor(
             _uiState.value = when (val result = getCurrentUser()) {
                 is AppResult.Success -> result.data?.let {
                     sessionManager.setCurrentUser(it)
+                    observeSession()
                     StartupUiState.Authenticated
                 } ?: run {
                     sessionManager.clearCurrentUser()
@@ -72,6 +77,7 @@ class StartupViewModel @Inject constructor(
     }
 
     private fun signOut() {
+        sessionObservationJob?.cancel()
         sessionManager.clearCurrentUser()
         _uiState.value = StartupUiState.Unauthenticated
         viewModelScope.launch {
@@ -85,12 +91,32 @@ class StartupViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = logout()) {
                 is AppResult.Success -> {
+                    sessionObservationJob?.cancel()
                     sessionManager.clearCurrentUser()
                     _logoutUiState.value = LogoutUiState()
                     _uiState.value = StartupUiState.Unauthenticated
                 }
                 is AppResult.Error -> {
                     _logoutUiState.value = LogoutUiState(error = result.error)
+                }
+            }
+        }
+    }
+
+    private fun observeSession() {
+        sessionObservationJob?.cancel()
+        sessionObservationJob = viewModelScope.launch {
+            observeCurrentUser().collect { result ->
+                when (result) {
+                    is AppResult.Success -> result.data?.let(sessionManager::setCurrentUser)
+                    is AppResult.Error -> when (result.error) {
+                        AuthenticationError.ACCOUNT_DISABLED,
+                        AuthenticationError.USER_PROFILE_MISSING -> {
+                            sessionManager.clearCurrentUser()
+                            _uiState.value = StartupUiState.Unauthenticated
+                        }
+                        else -> Unit
+                    }
                 }
             }
         }

@@ -305,6 +305,10 @@ must be rejected outside the UI boundary.
 
 # Quotation Permissions
 
+Quotation creation and editing, including unit price, discount percentage, tax percentage,
+and financial totals, are Administrator-only. Employees may view quotation lists and details
+only; they cannot access quotation create/edit routes or trigger quotation writes.
+
 Admin
 
 Create

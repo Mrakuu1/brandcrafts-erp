@@ -35,6 +35,7 @@ fun AppNavigationShell(
     onLogoutErrorShown: () -> Unit,
     onUnavailableFeature: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onEmployeeManagement: () -> Unit = onUnavailableFeature,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -86,7 +87,7 @@ fun AppNavigationShell(
                             logoutLabel = stringResource(R.string.logout),
                             onProfileClick = { profileExpanded = false; onUnavailableFeature() },
                             onChangePasswordClick = { profileExpanded = false; onUnavailableFeature() },
-                            onEmployeeManagementClick = { profileExpanded = false; onUnavailableFeature() },
+                            onEmployeeManagementClick = { profileExpanded = false; onEmployeeManagement() },
                             onSettingsClick = { profileExpanded = false; onUnavailableFeature() },
                             onLogoutClick = { profileExpanded = false; showLogoutConfirmation = true },
                         )

@@ -10,6 +10,10 @@ import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 class AuthenticationRepositoryImpl @Inject constructor(private val source: FirebaseAuthenticationDataSource) : AuthenticationRepository {
     override suspend fun login(email: String, password: String): AppResult<AuthenticatedUser> = try {
@@ -42,6 +46,23 @@ class AuthenticationRepositoryImpl @Inject constructor(private val source: Fireb
         }
         if (user.active) AppResult.Success(user) else { source.signOut(); AppResult.Error(AuthenticationError.ACCOUNT_DISABLED) }
     } catch (error: Throwable) { AppResult.Error(error.toAuthenticationError()) }
+    override fun observeCurrentUser(): Flow<AppResult<AuthenticatedUser?>> {
+        val uid = source.currentUserId() ?: return flowOf(AppResult.Success(null))
+        return source.observeUserProfile(uid).map { profile ->
+            val user = profile.takeIf { it.exists() }?.toAuthenticatedUser()
+            when {
+                user == null -> {
+                    source.signOut()
+                    AppResult.Error(AuthenticationError.USER_PROFILE_MISSING)
+                }
+                !user.active -> {
+                    source.signOut()
+                    AppResult.Error(AuthenticationError.ACCOUNT_DISABLED)
+                }
+                else -> AppResult.Success(user)
+            }
+        }.catch { error -> emit(AppResult.Error(error.toAuthenticationError())) }
+    }
 }
 private fun Throwable.toAuthenticationError() = when (this) {
     is FirebaseAuthInvalidCredentialsException -> AuthenticationError.INVALID_CREDENTIALS
