@@ -381,6 +381,75 @@ sortOrder : Integer
 
 ---
 
+## Invoice document rules
+
+Invoices use `invoices/{invoiceId}` and `invoices/{invoiceId}/items/{itemId}`. They are financial
+documents for an active Customer contact and never mutate Inventory in this phase. Invoice parent
+documents contain `id`, `invoiceNumber`, `customerId`, required `invoiceDate : Timestamp`, optional
+`dueDate : Timestamp`, `status : DRAFT | ISSUED | CANCELLED`, canonical plain-decimal `subtotal`,
+`taxTotal`, `discountTotal`, `grandTotal`, and `paidAmount`, plus `paymentStatus : UNPAID |
+PARTIALLY_PAID | PAID`, optional `remarks`, and the audit fields `createdAt`, `createdBy`,
+`updatedAt`, `updatedBy`, `issuedAt`, `issuedBy`, `cancelledAt`, and `cancelledBy`.
+
+`paidAmount` starts at `0`, must be non-negative, and must not exceed `grandTotal`.
+`outstandingAmount` and `isOverdue` are never stored: outstanding is `grandTotal - paidAmount`;
+overdue is a presentation condition only when an ISSUED invoice has a due date before the current
+date and a positive outstanding amount. Payment status is derived from the two authoritative
+amounts. New invoice numbers are generated atomically from `counters/invoice` using `INV-000001`
+format. Due dates may not precede invoice dates.
+
+Invoice items preserve stable `itemId` values and store `materialId`, `description`, `quantity`,
+`unit`, `unitPrice`, `discountPercent`, `taxPercent`, `lineSubtotal`, `lineDiscount`,
+`taxableAmount`, `lineTax`, `lineTotal`, and integer `sortOrder`. All decimal values are canonical
+plain decimal strings. Invoice calculations follow the existing Quotation policy: quantity times
+unit price, percentage discount, taxable amount, percentage tax, then line total. Monetary values
+are rounded to two decimal places using HALF_UP; parent totals are sums of the rounded line values.
+
+Allowed document transitions are `DRAFT -> ISSUED`, `DRAFT -> CANCELLED`, and
+`ISSUED -> CANCELLED` only where `paidAmount == 0`. Only Draft invoices may be edited. Payments
+may be recorded only against Issued invoices and do not alter Inventory.
+
+Invoice list observation listens to parent documents only, ordered by `invoiceDate` descending;
+it does not create item-subcollection listeners. Complete retrieval reads the parent and its
+`items` subcollection ordered by `sortOrder`. Snapshot listeners are removed when their Flow
+collector is cancelled. Malformed parent or item data fails the read through typed errors rather
+than producing fabricated invoices.
+
+---
+
+## Purchase Order document rules
+
+Purchase Orders use `documents/{purchaseOrderId}` with `type : PURCHASE_ORDER` and
+`documents/{purchaseOrderId}/items/{itemId}`. A Purchase Order parent document contains:
+
+- `supplierId : String`
+- `date : Timestamp` (required; legacy epoch values are temporarily readable)
+- `expectedDeliveryDate : Timestamp` (optional; legacy epoch values are temporarily readable)
+- `supplierReferenceNumber : String` (optional)
+- `remarks : String` (optional)
+- `status : DRAFT | APPROVED | CANCELLED`
+- `total : Decimal String`
+- `approvedAt : Timestamp` and `approvedBy : UID` when approved
+- `cancelledAt : Timestamp` and `cancelledBy : UID` when cancelled
+- the common document audit fields.
+
+Purchase Order items contain only `itemId`, `materialId`, `description`, `quantity`,
+`unit`, `unitPrice`, `lineTotal`, and `sortOrder`. Decimal values are canonical plain
+decimal strings. Purchase Orders do not store discount or tax values in this MVP.
+Purchase Order writes use a 475-write safe transaction limit (25 writes reserved below
+Firestore's 500-write limit). Create uses `itemCount + 3`; update uses submitted-item
+writes plus stale-item deletions plus parent and activity writes. Excessive requests fail
+before mutation; atomicity review remains deferred.
+Create commits the counter increment, parent, item documents, and activity log in one
+transaction after reading the counter. Update discovers item IDs before its transaction,
+then transactionally revalidates the Draft parent status and commits the parent, item
+writes, stale-item deletions, and activity log together. This pre-read means the stale
+set is not independently revalidated in the transaction. Approval and Draft cancellation
+each atomically commit their parent update and activity log. Approved cancellation remains
+blocked until Stock In stores a verifiable Purchase Order reference.
+
+---
+
 # Collection: settings
 
 Single document

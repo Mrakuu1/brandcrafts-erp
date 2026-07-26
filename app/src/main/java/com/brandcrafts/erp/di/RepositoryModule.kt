@@ -28,6 +28,10 @@ import com.brandcrafts.erp.data.repository.QuotationRepositoryImpl
 import com.brandcrafts.erp.data.datasource.company.CompanyConfigRemoteDataSource
 import com.brandcrafts.erp.data.datasource.company.FirestoreCompanyConfigRemoteDataSource
 import com.brandcrafts.erp.data.repository.CompanyConfigRepositoryImpl
+import com.brandcrafts.erp.data.datasource.purchaseorder.PurchaseOrderRemoteDataSource
+import com.brandcrafts.erp.data.datasource.purchaseorder.FirestorePurchaseOrderRemoteDataSource
+import com.brandcrafts.erp.data.repository.PurchaseOrderRepositoryImpl
+import com.brandcrafts.erp.data.repository.PurchaseOrderPdfRepositoryImpl
 import com.brandcrafts.erp.domain.repository.AuthenticationRepository
 import com.brandcrafts.erp.domain.repository.ContactRepository
 import com.brandcrafts.erp.domain.repository.EmployeeRepository
@@ -38,6 +42,8 @@ import com.brandcrafts.erp.domain.repository.MaterialUsageRepository
 import com.brandcrafts.erp.domain.repository.InventoryTransactionRepository
 import com.brandcrafts.erp.domain.repository.QuotationRepository
 import com.brandcrafts.erp.domain.repository.CompanyConfigRepository
+import com.brandcrafts.erp.domain.repository.PurchaseOrderRepository
+import com.brandcrafts.erp.domain.repository.PurchaseOrderPdfRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -65,4 +71,7 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindQuotationRepository(impl: QuotationRepositoryImpl): QuotationRepository
     @Binds @Singleton abstract fun bindCompanyConfigRemoteDataSource(impl: FirestoreCompanyConfigRemoteDataSource): CompanyConfigRemoteDataSource
     @Binds @Singleton abstract fun bindCompanyConfigRepository(impl: CompanyConfigRepositoryImpl): CompanyConfigRepository
+    @Binds @Singleton abstract fun bindPurchaseOrderRemoteDataSource(impl: FirestorePurchaseOrderRemoteDataSource): PurchaseOrderRemoteDataSource
+    @Binds @Singleton abstract fun bindPurchaseOrderRepository(impl: PurchaseOrderRepositoryImpl): PurchaseOrderRepository
+    @Binds @Singleton abstract fun bindPurchaseOrderPdfRepository(impl: PurchaseOrderPdfRepositoryImpl): PurchaseOrderPdfRepository
 }

@@ -337,17 +337,9 @@ Delete Hidden
 
 # Purchase Order Permissions
 
-Admin
-
-Create
-
-View
-
-Edit
-
-Delete
-
-Share PDF
+Admin: view, create, edit Draft orders, approve Draft orders, cancel Draft or eligible
+Approved orders, and generate/share PDFs. Employees have no Purchase Order access,
+including direct routes. Approval and cancellation never change inventory quantity.
 
 Employee
 

@@ -431,11 +431,22 @@ Items required
 
 Success
 
-Generate PO
+Atomically generate `PO-000001` style numbering, persist the Draft and line items,
+and record an activity log. No inventory transaction or material quantity update occurs.
+Draft may be approved or cancelled by an active Admin; Approved may only be cancelled
+when it has no Stock In reference. PDF generation uses company configuration and the
+Supplier, items, total, and status.
 
-PDF
+Purchase Order PDF flow loads the real Purchase Order, Supplier profile, and `config/company`;
+it renders a temporary file in `cacheDir/pdf/` and previews or shares it through FileProvider.
+Missing required CompanyConfig blocks generation. A remote-only logo is omitted safely, no terms
+section is rendered because no Purchase Order terms field exists, and approved cancellation stays
+blocked until Stock In contains a verifiable Purchase Order reference.
 
-Activity Log
+Orders is a unified tabbed destination: Quotations remains its existing tab, Purchase Orders is
+the Admin-only tab, and unavailable Invoice or Delivery Challan implementations use the existing
+coming-soon state. A Draft update discovers stale line IDs before the transaction, then atomically
+synchronizes the parent, item writes/deletions, and activity entry.
 
 ---
 

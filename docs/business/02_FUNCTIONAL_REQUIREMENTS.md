@@ -372,22 +372,32 @@ Purpose
 
 Request or place orders with suppliers.
 
-Fields
+Administrator-only purchasing document issued to an active Supplier. It uses existing
+Inventory materials but never changes inventory quantity; Stock In remains the only
+receipt workflow that increases stock.
 
-- Supplier
-- Date
-- Items
-- Quantity
-- Unit Price
-- Total
+Fields: Supplier, date, optional expected delivery date, optional supplier reference
+number, items, quantity, unit price, line total, total, optional remarks, and status.
 
-Functions
+Statuses are DRAFT, APPROVED, and CANCELLED. Allowed transitions are DRAFT to APPROVED,
+DRAFT to CANCELLED, and APPROVED to CANCELLED. Only DRAFT orders are editable. Purchase
+Orders do not support discount, tax, or GST calculations in this MVP.
 
-- Create
-- View
-- Share PDF
+Functions: Create, edit Draft, view details, approve, cancel, generate/share PDF.
 
-Administrator Only
+Implementation note: Orders uses the documented unified tabbed container. Quotations remain one
+tab and Purchase Orders are an Admin-only tab. Purchase Order details and forms display the
+authoritative grand total only; subtotal, tax, and discount are not represented in this MVP
+presentation contract.
+
+Purchase Order PDFs are generated in `cacheDir/pdf/` and previewed/shared through FileProvider.
+Required CompanyConfig identity fields must be present. A configured remote-only logo is omitted
+when no supported local bitmap resolver exists, and `quotationTerms` is not reused because
+Purchase Order terms are not configured.
+
+Draft updates preserve retained line IDs and discover stale line IDs with an external pre-read
+before the update transaction; the transaction then synchronizes the parent, retained/new lines,
+stale-line deletions, and activity entry together.
 
 ---
 
@@ -396,6 +406,11 @@ Administrator Only
 Purpose
 
 Generate customer invoices.
+
+Invoices are Customer-only financial documents and do not change Inventory. They use Draft,
+Issued, and Cancelled document states. Payment state is derived from stored `paidAmount` and
+`grandTotal` as Unpaid, Partially Paid, or Paid; outstanding amount and overdue state are derived
+and are not persisted. Due date is optional and cannot precede the required invoice date.
 
 Fields
 
