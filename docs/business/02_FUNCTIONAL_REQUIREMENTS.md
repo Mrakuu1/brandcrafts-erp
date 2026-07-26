@@ -405,7 +405,8 @@ stale-line deletions, and activity entry together.
 
 Purpose
 
-Generate customer invoices.
+Generate customer invoices, record cumulative payments, and produce a secure PDF from real
+Invoice, Customer, and company configuration data.
 
 Invoices are Customer-only financial documents and do not change Inventory. They use Draft,
 Issued, and Cancelled document states. Payment state is derived from stored `paidAmount` and
@@ -427,19 +428,30 @@ Fields
 
 Payment Status
 
-Pending
+Unpaid
 
-Partial
+Partially Paid
 
 Paid
 
 Functions
 
-- Create
-- Edit
-- Share PDF
+- Create a Draft invoice
+- Edit a Draft invoice
+- Issue a Draft invoice
+- Cancel an unpaid Draft or Issued invoice
+- Record an Issued-invoice payment without exceeding the outstanding amount
+- Preview or share the generated Invoice PDF
 
-Employees cannot modify prices.
+Invoice numbering is generated atomically as `INV-000001` from the Invoice counter. Monetary
+values use `BigDecimal` and plain-decimal persistence; the line calculation applies percentage
+discount before percentage tax, and totals use two-decimal HALF_UP rounding. `paidAmount` is
+authoritative; outstanding and overdue values are derived rather than stored. Creating, editing,
+issuing, cancelling, and recording payment never mutate Inventory.
+
+Current authoritative financial mutations are Admin-only. Employees can view available Invoice
+information and use PDF actions where permitted, but cannot create, edit, issue, cancel, record
+payments, change prices, or apply discounts.
 
 ---
 

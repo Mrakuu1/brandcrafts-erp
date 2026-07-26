@@ -37,6 +37,8 @@ import com.brandcrafts.erp.feature.quotation.QuotationFormRoute
 import com.brandcrafts.erp.feature.purchaseorder.OrdersRoute
 import com.brandcrafts.erp.feature.purchaseorder.PurchaseOrderFormRoute
 import com.brandcrafts.erp.feature.purchaseorder.PurchaseOrderDetailsRoute
+import com.brandcrafts.erp.feature.invoice.InvoiceDetailsRoute
+import com.brandcrafts.erp.feature.invoice.InvoiceFormRoute
 import com.brandcrafts.erp.feature.employee.EmployeeFormMode
 import com.brandcrafts.erp.feature.employee.EmployeeFormRoute
 import com.brandcrafts.erp.feature.inventory.InventoryRoute
@@ -67,6 +69,9 @@ private const val QUOTATION_EDIT_ROUTE = "quotation/edit/{quotationId}"
 private const val PURCHASE_ORDER_CREATE_ROUTE = "purchaseorders/create"
 private const val PURCHASE_ORDER_EDIT_ROUTE = "purchaseorders/edit/{purchaseOrderId}"
 private const val PURCHASE_ORDER_DETAILS_ROUTE = "purchaseorders/details/{purchaseOrderId}"
+private const val INVOICE_CREATE_ROUTE = "invoices/create"
+private const val INVOICE_EDIT_ROUTE = "invoices/edit/{invoiceId}"
+private const val INVOICE_DETAILS_ROUTE = "invoices/details/{invoiceId}"
 
 enum class AppDestination(val route: String, val titleRes: Int) {
     HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
@@ -160,6 +165,13 @@ private fun AppSessionNavHost(
     val quotationUnauthorizedMessage = stringResource(R.string.quotation_form_unauthorized_description)
     val quotationBlockedMessage = stringResource(R.string.quotation_form_edit_unavailable_description)
     val onEmployeeManagement = { navController.navigate(AppDestination.EMPLOYEES.route) }
+    val openInvoiceDetailsAfterSave: (String) -> Unit = { invoiceId ->
+        navController.popBackStack()
+        if (navController.currentDestination?.route == INVOICE_DETAILS_ROUTE) {
+            navController.popBackStack()
+        }
+        navController.navigate(invoiceDetailsRoute(invoiceId))
+    }
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         if (startDestination == LOGIN_ROUTE) {
             composable(LOGIN_ROUTE) {
@@ -219,6 +231,9 @@ private fun AppSessionNavHost(
                                         onCreatePurchaseOrder = { navController.navigate(PURCHASE_ORDER_CREATE_ROUTE) },
                                         onOpenPurchaseOrder = { id -> navController.navigate(purchaseOrderDetailsRoute(id)) },
                                         onEditPurchaseOrder = { id -> navController.navigate(purchaseOrderEditRoute(id)) },
+                                        onCreateInvoice = { navController.navigate(INVOICE_CREATE_ROUTE) },
+                                        onOpenInvoice = { id -> navController.navigate(invoiceDetailsRoute(id)) },
+                                        onEditInvoice = { id -> navController.navigate(invoiceEditRoute(id)) },
                                         onUnauthorized = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
                                     )
                                     else -> PlaceholderScreen(title = stringResource(destination.titleRes))
@@ -403,6 +418,36 @@ private fun AppSessionNavHost(
                         onUnauthorized = { message -> navController.popBackStack(); coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
                     )
                 }
+                composable(INVOICE_CREATE_ROUTE) {
+                    InvoiceFormRoute(
+                        onBack = { navController.popBackStack() },
+                        onInvoiceSaved = openInvoiceDetailsAfterSave,
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
+                composable(INVOICE_EDIT_ROUTE) {
+                    InvoiceFormRoute(
+                        onBack = { navController.popBackStack() },
+                        onInvoiceSaved = openInvoiceDetailsAfterSave,
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
+                composable(INVOICE_DETAILS_ROUTE) {
+                    InvoiceDetailsRoute(
+                        onBack = { navController.popBackStack() },
+                        onEditInvoice = { id -> navController.navigate(invoiceEditRoute(id)) },
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
             }
         }
     }
@@ -419,6 +464,8 @@ private fun quotationEditRoute(quotationId: String): String =
 
 private fun purchaseOrderEditRoute(purchaseOrderId: String): String = PURCHASE_ORDER_EDIT_ROUTE.replace("{purchaseOrderId}", purchaseOrderId)
 private fun purchaseOrderDetailsRoute(purchaseOrderId: String): String = PURCHASE_ORDER_DETAILS_ROUTE.replace("{purchaseOrderId}", purchaseOrderId)
+private fun invoiceEditRoute(invoiceId: String): String = INVOICE_EDIT_ROUTE.replace("{invoiceId}", invoiceId)
+private fun invoiceDetailsRoute(invoiceId: String): String = INVOICE_DETAILS_ROUTE.replace("{invoiceId}", invoiceId)
 
 @Composable
 private fun StartupLoading(modifier: Modifier) {

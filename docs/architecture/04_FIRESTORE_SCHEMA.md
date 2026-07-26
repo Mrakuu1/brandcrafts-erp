@@ -417,6 +417,27 @@ than producing fabricated invoices.
 
 ---
 
+Invoice write infrastructure reserves 25 writes below Firestore's 500-write limit, giving a safe
+limit of 475. Create is `itemCount + 3` (counter, parent, activity) and therefore permits at most
+472 lines. Draft update is `submittedItemCount + staleDeleteCount + 2`; Issue, Cancellation, and
+Payment are two writes each (parent plus activity). Requests that exceed the safe limit fail before
+any mutation. The missing `counters/invoice` document represents zero issued numbers, so the first
+transaction formats `INV-000001`.
+
+Create atomically reads and increments the counter, verifies the generated parent document does not
+already exist, writes the parent and every item, and writes `INVOICE_CREATED`. Draft update performs
+a pre-read to discover stale item IDs, then atomically rechecks that the parent remains Draft,
+synchronizes parent and retained/new items, deletes stale items, and writes `INVOICE_UPDATED`.
+The stale-ID pre-read is a documented concurrency limitation; the parent status and all writes are
+still revalidated together in the transaction. Issue, cancellation, and payment each atomically
+update the parent and write their corresponding activity.
+
+Invoice IDs, item IDs, and activity IDs are generated before transaction execution and reused for
+every transaction retry. The transaction derives the invoice number from the counter. New and
+updated writes require a validated, authenticated, active Admin actor; caller-supplied actor IDs
+are never trusted. Create, Draft update, and Issue validate that the referenced Contact exists,
+is active, and has type `CUSTOMER`; they never create a Customer implicitly.
+
 ## Purchase Order document rules
 
 Purchase Orders use `documents/{purchaseOrderId}` with `type : PURCHASE_ORDER` and

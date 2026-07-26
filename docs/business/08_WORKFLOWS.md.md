@@ -444,9 +444,9 @@ section is rendered because no Purchase Order terms field exists, and approved c
 blocked until Stock In contains a verifiable Purchase Order reference.
 
 Orders is a unified tabbed destination: Quotations remains its existing tab, Purchase Orders is
-the Admin-only tab, and unavailable Invoice or Delivery Challan implementations use the existing
-coming-soon state. A Draft update discovers stale line IDs before the transaction, then atomically
-synchronizes the parent, item writes/deletions, and activity entry.
+the Admin-only tab, Invoices opens the implemented Invoice list, and Delivery Challans remains in
+its existing availability state. A Draft update discovers stale line IDs before the transaction,
+then atomically synchronizes the parent, item writes/deletions, and activity entry.
 
 ---
 
@@ -454,9 +454,8 @@ synchronizes the parent, item writes/deletions, and activity entry.
 
 Actor
 
-Admin
-
-Employee
+Admin for Invoice financial mutations; an Employee may only view permitted Invoice information
+and use permitted PDF actions.
 
 Trigger
 
@@ -492,11 +491,15 @@ Total calculated
 
 Success
 
-Generate Invoice
+Atomically generate `INV-000001`-style numbering, persist a Draft and its line items, and write
+an `INVOICE_CREATED` activity. Drafts may be edited, issued, or cancelled. Issued invoices accept
+positive payments up to their outstanding amount; status becomes Unpaid, Partially Paid, or Paid
+from the cumulative paid amount. Cancellation is blocked after any payment. Invoice creation,
+issue, cancellation, and payment do not modify Inventory.
 
-PDF
-
-Activity Log
+PDF generation loads the real Invoice, Customer, and `config/company`, creates a paginated cache
+file, and previews or shares it through the existing FileProvider. Required company identity
+fields are mandatory; remote-only logos are omitted safely and quotation terms are not reused.
 
 ---
 

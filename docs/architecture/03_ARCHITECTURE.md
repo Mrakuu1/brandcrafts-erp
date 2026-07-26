@@ -412,6 +412,12 @@ Employee Management
 
 Settings
 
+Orders retains one shared NavHost and contains its existing document tabs. The Invoice tab routes
+to the Invoice list; list actions route to Create Invoice, Edit Draft Invoice, and Invoice Details
+using only the persisted invoice ID. Form success opens Invoice Details, Details back returns to
+the list, and form back returns to its previous destination. No Invoice route accepts a role,
+customer type, payment state, or other authorization value as a navigation argument.
+
 ---
 
 # Dependency Injection

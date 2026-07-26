@@ -18,6 +18,7 @@ import com.brandcrafts.erp.data.repository.AuthenticationRepositoryImpl
 import com.brandcrafts.erp.data.repository.ContactRepositoryImpl
 import com.brandcrafts.erp.data.repository.EmployeeRepositoryImpl
 import com.brandcrafts.erp.data.repository.InventoryRepositoryImpl
+import com.brandcrafts.erp.data.repository.InvoicePdfRepositoryImpl
 import com.brandcrafts.erp.data.repository.StockRepositoryImpl
 import com.brandcrafts.erp.data.repository.StockOutRepositoryImpl
 import com.brandcrafts.erp.data.repository.MaterialUsageRepositoryImpl
@@ -32,10 +33,24 @@ import com.brandcrafts.erp.data.datasource.purchaseorder.PurchaseOrderRemoteData
 import com.brandcrafts.erp.data.datasource.purchaseorder.FirestorePurchaseOrderRemoteDataSource
 import com.brandcrafts.erp.data.repository.PurchaseOrderRepositoryImpl
 import com.brandcrafts.erp.data.repository.PurchaseOrderPdfRepositoryImpl
+import com.brandcrafts.erp.data.datasource.invoice.FirestoreInvoiceCancellationRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.FirestoreInvoiceCreateRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.FirestoreInvoiceDraftUpdateRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.FirestoreInvoiceIssueRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.FirestoreInvoicePaymentRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.FirestoreInvoiceRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.InvoiceCancellationRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.InvoiceCreateRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.InvoiceDraftUpdateRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.InvoiceIssueRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.InvoicePaymentRemoteDataSource
+import com.brandcrafts.erp.data.datasource.invoice.InvoiceRemoteDataSource
+import com.brandcrafts.erp.data.repository.InvoiceRepositoryImpl
 import com.brandcrafts.erp.domain.repository.AuthenticationRepository
 import com.brandcrafts.erp.domain.repository.ContactRepository
 import com.brandcrafts.erp.domain.repository.EmployeeRepository
 import com.brandcrafts.erp.domain.repository.InventoryRepository
+import com.brandcrafts.erp.domain.repository.InvoicePdfRepository
 import com.brandcrafts.erp.domain.repository.StockRepository
 import com.brandcrafts.erp.domain.repository.StockOutRepository
 import com.brandcrafts.erp.domain.repository.MaterialUsageRepository
@@ -44,6 +59,7 @@ import com.brandcrafts.erp.domain.repository.QuotationRepository
 import com.brandcrafts.erp.domain.repository.CompanyConfigRepository
 import com.brandcrafts.erp.domain.repository.PurchaseOrderRepository
 import com.brandcrafts.erp.domain.repository.PurchaseOrderPdfRepository
+import com.brandcrafts.erp.domain.repository.InvoiceRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -74,4 +90,12 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindPurchaseOrderRemoteDataSource(impl: FirestorePurchaseOrderRemoteDataSource): PurchaseOrderRemoteDataSource
     @Binds @Singleton abstract fun bindPurchaseOrderRepository(impl: PurchaseOrderRepositoryImpl): PurchaseOrderRepository
     @Binds @Singleton abstract fun bindPurchaseOrderPdfRepository(impl: PurchaseOrderPdfRepositoryImpl): PurchaseOrderPdfRepository
+    @Binds @Singleton abstract fun bindInvoiceRemoteDataSource(impl: FirestoreInvoiceRemoteDataSource): InvoiceRemoteDataSource
+    @Binds @Singleton abstract fun bindInvoiceCreateRemoteDataSource(impl: FirestoreInvoiceCreateRemoteDataSource): InvoiceCreateRemoteDataSource
+    @Binds @Singleton abstract fun bindInvoiceDraftUpdateRemoteDataSource(impl: FirestoreInvoiceDraftUpdateRemoteDataSource): InvoiceDraftUpdateRemoteDataSource
+    @Binds @Singleton abstract fun bindInvoiceIssueRemoteDataSource(impl: FirestoreInvoiceIssueRemoteDataSource): InvoiceIssueRemoteDataSource
+    @Binds @Singleton abstract fun bindInvoiceCancellationRemoteDataSource(impl: FirestoreInvoiceCancellationRemoteDataSource): InvoiceCancellationRemoteDataSource
+    @Binds @Singleton abstract fun bindInvoicePaymentRemoteDataSource(impl: FirestoreInvoicePaymentRemoteDataSource): InvoicePaymentRemoteDataSource
+    @Binds @Singleton abstract fun bindInvoiceRepository(impl: InvoiceRepositoryImpl): InvoiceRepository
+    @Binds @Singleton abstract fun bindInvoicePdfRepository(impl: InvoicePdfRepositoryImpl): InvoicePdfRepository
 }

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
 import com.brandcrafts.erp.core.common.CurrentUserState
 import com.brandcrafts.erp.domain.model.UserRole
+import com.brandcrafts.erp.feature.invoice.InvoiceListRoute
 import com.brandcrafts.erp.feature.quotation.QuotationRoute
 import com.brandcrafts.erp.ui.LocalCurrentUser
 import com.brandcrafts.erp.ui.components.EmptyState
@@ -29,6 +30,9 @@ fun OrdersRoute(
     onCreatePurchaseOrder: () -> Unit,
     onOpenPurchaseOrder: (String) -> Unit,
     onEditPurchaseOrder: (String) -> Unit,
+    onCreateInvoice: () -> Unit,
+    onOpenInvoice: (String) -> Unit,
+    onEditInvoice: (String) -> Unit,
     onUnauthorized: (String) -> Unit,
 ) {
     val user = (LocalCurrentUser.current as? CurrentUserState.Authenticated)?.user
@@ -49,7 +53,14 @@ fun OrdersRoute(
         when (tabs[selectedIndex]) {
             OrdersTab.Quotations -> QuotationRoute(onCreateQuotation, onEditQuotation)
             OrdersTab.PurchaseOrders -> PurchaseOrderRoute(onCreatePurchaseOrder, onOpenPurchaseOrder, onEditPurchaseOrder, onUnauthorized)
-            OrdersTab.Invoices, OrdersTab.DeliveryChallans -> EmptyState(
+            OrdersTab.Invoices -> InvoiceListRoute(
+                onCreateInvoice = onCreateInvoice,
+                onOpenInvoice = onOpenInvoice,
+                onEditInvoice = onEditInvoice,
+                onRecordPayment = onOpenInvoice,
+                onUnauthorized = onUnauthorized,
+            )
+            OrdersTab.DeliveryChallans -> EmptyState(
                 title = stringResource(R.string.feature_coming_later),
                 description = stringResource(R.string.placeholder_screen_message),
                 modifier = Modifier.padding(horizontal = 16.dp),

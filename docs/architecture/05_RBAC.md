@@ -353,35 +353,18 @@ Purchase Orders are not visible to employees.
 
 Admin
 
-Create
-
-View
-
-Edit
-
-Delete
-
-Apply Discount
-
-Modify Prices
-
-Share PDF
+Create Drafts, view, edit Drafts, issue, cancel eligible unpaid invoices, record payments,
+modify prices and discounts, and preview or share PDFs.
 
 Employee
 
-Create
-
-View
-
-Share PDF
+View permitted Invoice information and preview or share PDFs only.
 
 Locked
 
-Price
-
-Discount
-
-Delete
+Invoice create/edit/issue/cancel/payment, price changes, discounts, and deletion are Admin-only.
+The repository validates the authenticated active Admin actor for every financial mutation; route
+visibility is not an authorization mechanism.
 
 ---
 
@@ -526,7 +509,8 @@ Hide completely.
 | Purchase Orders | Create | ✅ | ❌ |
 | Purchase Orders | Edit | ✅ | ❌ |
 | Purchase Orders | Delete | ✅ | ❌ |
-| Billing | Create Invoice | ✅ | ✅ |
+| Billing | View Invoice | ✅ | ✅ |
+| Billing | Create Invoice | ✅ | ❌ |
 | Billing | Edit Prices | ✅ | ❌ |
 | Billing | Discount | ✅ | ❌ |
 | Billing | Delete Invoice | ✅ | ❌ |
