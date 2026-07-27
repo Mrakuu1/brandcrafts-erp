@@ -198,8 +198,8 @@ Can:
 - Perform stock movement
 - Record material usage
 - Create quotations
-- Generate invoices
-- Create delivery challans
+- View permitted invoices and delivery challans
+- Preview or share permitted document PDFs
 - View customers
 - View suppliers
 

@@ -460,6 +460,13 @@ Convert
 
 Quotation → Invoice
 
+Delivery Challan details are non-financial: they show Challan number, status, Customer, delivery
+address/date, optional source Invoice, vehicle/driver, descriptions, quantities, units, notes, and
+available audit information. Prices, tax, discounts, totals, and payments are never rendered.
+Draft-only Edit, Dispatch, and Cancel are displayed only for an authorized Admin. PDF preview/share
+uses the existing secure FileProvider flow and reports recoverable errors through the screen's
+snackbar.
+
 ---
 
 # 9 Employee Management

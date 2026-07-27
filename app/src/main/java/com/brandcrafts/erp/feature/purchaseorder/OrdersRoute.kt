@@ -21,7 +21,7 @@ import com.brandcrafts.erp.domain.model.UserRole
 import com.brandcrafts.erp.feature.invoice.InvoiceListRoute
 import com.brandcrafts.erp.feature.quotation.QuotationRoute
 import com.brandcrafts.erp.ui.LocalCurrentUser
-import com.brandcrafts.erp.ui.components.EmptyState
+import com.brandcrafts.erp.feature.deliverychallan.DeliveryChallanListRoute
 
 @Composable
 fun OrdersRoute(
@@ -33,6 +33,10 @@ fun OrdersRoute(
     onCreateInvoice: () -> Unit,
     onOpenInvoice: (String) -> Unit,
     onEditInvoice: (String) -> Unit,
+    onCreateDeliveryChallan: () -> Unit,
+    onCreateDeliveryChallanFromInvoice: () -> Unit,
+    onOpenDeliveryChallan: (String) -> Unit,
+    onEditDeliveryChallan: (String) -> Unit,
     onUnauthorized: (String) -> Unit,
 ) {
     val user = (LocalCurrentUser.current as? CurrentUserState.Authenticated)?.user
@@ -60,10 +64,12 @@ fun OrdersRoute(
                 onRecordPayment = onOpenInvoice,
                 onUnauthorized = onUnauthorized,
             )
-            OrdersTab.DeliveryChallans -> EmptyState(
-                title = stringResource(R.string.feature_coming_later),
-                description = stringResource(R.string.placeholder_screen_message),
-                modifier = Modifier.padding(horizontal = 16.dp),
+            OrdersTab.DeliveryChallans -> DeliveryChallanListRoute(
+                onCreate = onCreateDeliveryChallan,
+                onCreateFromInvoice = onCreateDeliveryChallanFromInvoice,
+                onDetails = onOpenDeliveryChallan,
+                onEdit = onEditDeliveryChallan,
+                onUnauthorized = onUnauthorized,
             )
         }
     }

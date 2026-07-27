@@ -1,0 +1,25 @@
+package com.brandcrafts.erp.domain.model
+
+data class DeliveryChallan(
+    val id: String,
+    val number: String,
+    val customerId: String,
+    val deliveryAddress: String,
+    val dateMillis: Long,
+    val sourceType: DeliveryChallanSourceType,
+    val sourceInvoiceId: String? = null,
+    val sourceInvoiceNumber: String? = null,
+    val vehicleNumber: String,
+    val driverName: String,
+    val notes: String,
+    val status: DeliveryChallanStatus,
+    val createdAtMillis: Long?,
+    val updatedAtMillis: Long?,
+    val createdBy: String,
+    val updatedBy: String,
+    val dispatchedAtMillis: Long?,
+    val dispatchedBy: String?,
+    val cancelledAtMillis: Long?,
+    val cancelledBy: String?,
+    val lines: List<DeliveryChallanLine> = emptyList(),
+)

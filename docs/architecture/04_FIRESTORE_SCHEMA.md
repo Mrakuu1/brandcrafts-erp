@@ -915,7 +915,44 @@ Supplier Name required
 
 ---
 
-# Future Collections
+## Delivery Challan document rules
+
+Delivery Challans use `delivery_challans/{deliveryChallanId}` and
+`delivery_challans/{deliveryChallanId}/items/{itemId}`. The counter is `counters/deliveryChallan`;
+numbers are generated atomically as `DC-000001`. A parent contains `id`, `dcNumber`, `customerId`,
+`deliveryAddress`, required `date : Timestamp`, `sourceType : INDEPENDENT | INVOICE`, nullable
+`sourceInvoiceId` and `sourceInvoiceNumber`, optional `vehicleNumber`, `driverName`, and `notes`,
+`status : DRAFT | DISPATCHED | CANCELLED`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, and
+the nullable dispatch/cancellation audit pairs `dispatchedAt`/`dispatchedBy` and
+`cancelledAt`/`cancelledBy`. Audit timestamps use `FieldValue.serverTimestamp()`; the delivery date
+is the user-selected business date and is stored as a Firestore `Timestamp`.
+
+Item documents contain stable `itemId` (also the item-document ID), optional `materialId`,
+`description`, positive decimal-string `quantity`, `unit`, and integer `sortOrder`. They contain no
+prices, discounts, tax, totals, payments, or other financial fields. A material-less free-text line
+is permitted only when it has a description and unit. `sortOrder` is recalculated sequentially when
+a Draft is edited; it is never used as the persistent line identity.
+
+Only a Draft may be edited. The only status transitions are `DRAFT -> DISPATCHED` and
+`DRAFT -> CANCELLED`; both terminal states are immutable. Independent creation stores no source
+Invoice reference. Invoice conversion accepts only an `ISSUED` Invoice, copies only the Customer
+reference plus material ID, description, quantity, and unit, preserves the immutable Invoice ID and
+number, limits requested quantity to the matching Invoice line, and refuses a second active
+(`DRAFT` or `DISPATCHED`) Delivery Challan for the same Invoice. It does not modify the source
+Invoice. Quotation conversion is unsupported.
+
+Create and Draft edit never mutate Inventory. Dispatch is the only Inventory-changing operation. In
+one Firestore transaction it rereads the Draft parent and persisted lines, checks for an existing
+`stock_transactions` document with `referenceType = DELIVERY_CHALLAN` and the Challan's
+`referenceId`, validates active material stock, decreases each material quantity, creates the Stock
+Out records, changes the parent to `DISPATCHED`, and writes the dispatch activity. Free-text lines
+do not create a stock movement. This parent-status recheck and reference check prevent duplicate
+stock deduction. Stock reversal after dispatch is not implemented.
+
+Draft updates discover stale item IDs with an external pre-read before the update transaction. The
+transaction re-reads the parent and requires `DRAFT`, then atomically writes the parent, retained or
+new lines, stale-line deletions, and update activity. This is the documented stale-line-discovery
+limitation; it does not permit source or creation-audit changes.
 
 attendance
 

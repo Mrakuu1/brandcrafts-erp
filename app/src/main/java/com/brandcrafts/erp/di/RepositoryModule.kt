@@ -19,6 +19,7 @@ import com.brandcrafts.erp.data.repository.ContactRepositoryImpl
 import com.brandcrafts.erp.data.repository.EmployeeRepositoryImpl
 import com.brandcrafts.erp.data.repository.InventoryRepositoryImpl
 import com.brandcrafts.erp.data.repository.InvoicePdfRepositoryImpl
+import com.brandcrafts.erp.data.repository.DeliveryChallanPdfRepositoryImpl
 import com.brandcrafts.erp.data.repository.StockRepositoryImpl
 import com.brandcrafts.erp.data.repository.StockOutRepositoryImpl
 import com.brandcrafts.erp.data.repository.MaterialUsageRepositoryImpl
@@ -51,6 +52,7 @@ import com.brandcrafts.erp.domain.repository.ContactRepository
 import com.brandcrafts.erp.domain.repository.EmployeeRepository
 import com.brandcrafts.erp.domain.repository.InventoryRepository
 import com.brandcrafts.erp.domain.repository.InvoicePdfRepository
+import com.brandcrafts.erp.domain.repository.DeliveryChallanPdfRepository
 import com.brandcrafts.erp.domain.repository.StockRepository
 import com.brandcrafts.erp.domain.repository.StockOutRepository
 import com.brandcrafts.erp.domain.repository.MaterialUsageRepository
@@ -98,4 +100,5 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindInvoicePaymentRemoteDataSource(impl: FirestoreInvoicePaymentRemoteDataSource): InvoicePaymentRemoteDataSource
     @Binds @Singleton abstract fun bindInvoiceRepository(impl: InvoiceRepositoryImpl): InvoiceRepository
     @Binds @Singleton abstract fun bindInvoicePdfRepository(impl: InvoicePdfRepositoryImpl): InvoicePdfRepository
+    @Binds @Singleton abstract fun bindDeliveryChallanPdfRepository(impl: DeliveryChallanPdfRepositoryImpl): DeliveryChallanPdfRepository
 }

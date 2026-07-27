@@ -27,7 +27,6 @@ import com.brandcrafts.erp.core.result.AuthenticationError
 import com.brandcrafts.erp.feature.auth.LoginRoute
 import com.brandcrafts.erp.feature.auth.ForgotPasswordRoute
 import com.brandcrafts.erp.feature.dashboard.DashboardRoute
-import com.brandcrafts.erp.feature.dashboard.DashboardUiState
 import com.brandcrafts.erp.feature.contacts.ContactsRoute
 import com.brandcrafts.erp.feature.contacts.ContactFormMode
 import com.brandcrafts.erp.feature.contacts.ContactFormRoute
@@ -39,6 +38,8 @@ import com.brandcrafts.erp.feature.purchaseorder.PurchaseOrderFormRoute
 import com.brandcrafts.erp.feature.purchaseorder.PurchaseOrderDetailsRoute
 import com.brandcrafts.erp.feature.invoice.InvoiceDetailsRoute
 import com.brandcrafts.erp.feature.invoice.InvoiceFormRoute
+import com.brandcrafts.erp.feature.deliverychallan.DeliveryChallanDetailsRoute
+import com.brandcrafts.erp.feature.deliverychallan.DeliveryChallanFormRoute
 import com.brandcrafts.erp.feature.employee.EmployeeFormMode
 import com.brandcrafts.erp.feature.employee.EmployeeFormRoute
 import com.brandcrafts.erp.feature.inventory.InventoryRoute
@@ -72,6 +73,10 @@ private const val PURCHASE_ORDER_DETAILS_ROUTE = "purchaseorders/details/{purcha
 private const val INVOICE_CREATE_ROUTE = "invoices/create"
 private const val INVOICE_EDIT_ROUTE = "invoices/edit/{invoiceId}"
 private const val INVOICE_DETAILS_ROUTE = "invoices/details/{invoiceId}"
+private const val DELIVERY_CHALLAN_CREATE_ROUTE = "deliverychallans/create"
+private const val DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE = "deliverychallans/create/from-invoice/{invoiceId}"
+private const val DELIVERY_CHALLAN_EDIT_ROUTE = "deliverychallans/edit/{challanId}"
+private const val DELIVERY_CHALLAN_DETAILS_ROUTE = "deliverychallans/details/{challanId}"
 
 enum class AppDestination(val route: String, val titleRes: Int) {
     HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
@@ -152,7 +157,6 @@ private fun AppSessionNavHost(
             Unit
         }
     }
-    val dashboardUiState = remember { DashboardUiState.Loaded() }
     val inventorySavedMessage = stringResource(R.string.inventory_form_save_success)
     val stockInSavedMessage = stringResource(R.string.stock_in_success)
     val stockOutSavedMessage = stringResource(R.string.stock_out_success)
@@ -201,15 +205,13 @@ private fun AppSessionNavHost(
                             ) {
                                 when (destination) {
                                     AppDestination.HOME -> DashboardRoute(
-                                        uiState = dashboardUiState,
-                                        onAddStockClick = onUnavailableFeature,
-                                        onInvoiceClick = onUnavailableFeature,
-                                        onQuotationClick = onUnavailableFeature,
+                                        onAddStockClick = { navController.navigate(AppDestination.STOCK.route) },
+                                        onInvoiceClick = { navController.navigate(INVOICE_CREATE_ROUTE) },
+                                        onQuotationClick = { navController.navigate(QUOTATION_CREATE_ROUTE) },
                                         onEmployeeManagementClick = onEmployeeManagement,
                                         onStockInClick = onUnavailableFeature,
                                         onStockOutClick = onUnavailableFeature,
                                         onMaterialUsageClick = onUnavailableFeature,
-                                        onRetryClick = onUnavailableFeature,
                                     )
                                     AppDestination.STOCK -> InventoryRoute(
                                         onItemDetailsClick = { onUnavailableFeature() },
@@ -234,6 +236,10 @@ private fun AppSessionNavHost(
                                         onCreateInvoice = { navController.navigate(INVOICE_CREATE_ROUTE) },
                                         onOpenInvoice = { id -> navController.navigate(invoiceDetailsRoute(id)) },
                                         onEditInvoice = { id -> navController.navigate(invoiceEditRoute(id)) },
+                                        onCreateDeliveryChallan = { navController.navigate(DELIVERY_CHALLAN_CREATE_ROUTE) },
+                                        onCreateDeliveryChallanFromInvoice = onUnavailableFeature,
+                                        onOpenDeliveryChallan = { id -> navController.navigate(deliveryChallanDetailsRoute(id)) },
+                                        onEditDeliveryChallan = { id -> navController.navigate(deliveryChallanEditRoute(id)) },
                                         onUnauthorized = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
                                     )
                                     else -> PlaceholderScreen(title = stringResource(destination.titleRes))
@@ -448,6 +454,58 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
+                composable(DELIVERY_CHALLAN_CREATE_ROUTE) {
+                    DeliveryChallanFormRoute(
+                        onBack = { navController.popBackStack() },
+                        onSaved = { id ->
+                            navController.navigate(deliveryChallanDetailsRoute(id)) {
+                                popUpTo(DELIVERY_CHALLAN_CREATE_ROUTE) { inclusive = true }
+                            }
+                        },
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
+                composable(DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE) {
+                    DeliveryChallanFormRoute(
+                        onBack = { navController.popBackStack() },
+                        onSaved = { id ->
+                            navController.navigate(deliveryChallanDetailsRoute(id)) {
+                                popUpTo(DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE) { inclusive = true }
+                            }
+                        },
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
+                composable(DELIVERY_CHALLAN_EDIT_ROUTE) {
+                    DeliveryChallanFormRoute(
+                        onBack = { navController.popBackStack() },
+                        onSaved = { id ->
+                            navController.navigate(deliveryChallanDetailsRoute(id)) {
+                                popUpTo(DELIVERY_CHALLAN_EDIT_ROUTE) { inclusive = true }
+                            }
+                        },
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
+                composable(DELIVERY_CHALLAN_DETAILS_ROUTE) {
+                    DeliveryChallanDetailsRoute(
+                        onBack = { navController.popBackStack() },
+                        onEditDraft = { id -> navController.navigate(deliveryChallanEditRoute(id)) },
+                        onUnauthorized = { message ->
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(message) }
+                        },
+                    )
+                }
             }
         }
     }
@@ -466,6 +524,12 @@ private fun purchaseOrderEditRoute(purchaseOrderId: String): String = PURCHASE_O
 private fun purchaseOrderDetailsRoute(purchaseOrderId: String): String = PURCHASE_ORDER_DETAILS_ROUTE.replace("{purchaseOrderId}", purchaseOrderId)
 private fun invoiceEditRoute(invoiceId: String): String = INVOICE_EDIT_ROUTE.replace("{invoiceId}", invoiceId)
 private fun invoiceDetailsRoute(invoiceId: String): String = INVOICE_DETAILS_ROUTE.replace("{invoiceId}", invoiceId)
+private fun deliveryChallanEditRoute(challanId: String): String =
+    DELIVERY_CHALLAN_EDIT_ROUTE.replace("{challanId}", challanId)
+private fun deliveryChallanDetailsRoute(challanId: String): String =
+    DELIVERY_CHALLAN_DETAILS_ROUTE.replace("{challanId}", challanId)
+private fun deliveryChallanCreateFromInvoiceRoute(invoiceId: String): String =
+    DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE.replace("{invoiceId}", invoiceId)
 
 @Composable
 private fun StartupLoading(modifier: Modifier) {

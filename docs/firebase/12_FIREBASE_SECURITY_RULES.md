@@ -85,7 +85,7 @@ These helper functions should be reused throughout the rules file.
 
 /invoices
 
-/deliveryChallans
+/delivery_challans
 
 /activityLogs
 
@@ -133,13 +133,9 @@ Create
 
 Admin
 
-Employee
-
 Update
 
 Admin
-
-Employee
 
 Delete
 
@@ -319,17 +315,19 @@ Create
 
 Admin
 
-Employee
-
 Update
 
 Admin
 
-Employee
-
 Delete
 
-Admin
+Never
+
+Delivery Challan parent and `items` writes must be restricted to an authenticated active Admin.
+Rules must reject changes to immutable number, source, and creation-audit fields after creation;
+only Draft parents may be edited. Dispatch is a coordinated privileged transaction that changes the
+parent, Inventory, Stock Out records, and activity log together. Security rules must not allow an
+Employee to invoke those writes directly. Activity and Stock Out records remain append-only.
 
 ---
 
@@ -389,7 +387,7 @@ invoices/
 
 purchaseOrders/
 
-deliveryChallans/
+delivery_challans/
 
 company/
 

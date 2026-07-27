@@ -311,15 +311,8 @@ only; they cannot access quotation create/edit routes or trigger quotation write
 
 Admin
 
-Create
-
-View
-
-Edit
-
-Delete
-
-Share PDF
+View, create independently, create from an Issued Invoice, edit Drafts, dispatch Drafts, cancel
+Drafts, and preview or share PDFs.
 
 Employee
 
@@ -372,25 +365,17 @@ visibility is not an authorization mechanism.
 
 Admin
 
-Create
-
-View
-
-Edit
-
-Delete
-
-Share PDF
+View, create independently, create from an Issued Invoice, edit Drafts, dispatch Drafts, cancel
+Drafts, and preview or share PDFs.
 
 Employee
 
-Create
+View permitted Delivery Challans and use permitted PDF actions only.
 
-View
-
-Share PDF
-
-Delete Hidden
+All Delivery Challan mutations are Admin-only and must validate the authenticated, active Admin at
+the repository/data boundary; hiding UI actions is not authorization. There is no delete operation.
+Dispatch and cancellation require a current Draft status, while an Employee cannot create, edit,
+dispatch, or cancel through a direct route or data call.
 
 ---
 
@@ -515,8 +500,12 @@ Hide completely.
 | Billing | Discount | ✅ | ❌ |
 | Billing | Delete Invoice | ✅ | ❌ |
 | Billing | Share Invoice | ✅ | ✅ |
-| Delivery Challan | Create | ✅ | ✅ |
-| Delivery Challan | Share | ✅ | ✅ |
+| Delivery Challan | View | ✅ | ✅ |
+| Delivery Challan | Create / Invoice Conversion | ✅ | ❌ |
+| Delivery Challan | Edit Draft | ✅ | ❌ |
+| Delivery Challan | Dispatch | ✅ | ❌ |
+| Delivery Challan | Cancel Draft | ✅ | ❌ |
+| Delivery Challan | Preview / Share PDF | ✅ | ✅ |
 | Employee Management | Full Access | ✅ | ❌ |
 | Settings | Full Access | ✅ | ❌ |
 

@@ -48,7 +48,7 @@ Responsibilities include:
 - Record Material Usage
 - Create Quotations
 - Generate Bills
-- Create Delivery Challans
+- View Delivery Challans and use permitted PDF actions
 - View Customers
 - View Suppliers
 
@@ -459,23 +459,48 @@ payments, change prices, or apply discounts.
 
 Purpose
 
-Generate delivery documents.
+Generate non-financial delivery documents for a Customer.
 
 Fields
 
-- Customer
-- Invoice Reference
-- Delivery Date
-- Vehicle Number
-- Driver Name
-- Items
+- Customer and delivery address
+- Required delivery date
+- Optional Invoice reference
+- Optional vehicle number and driver name
+- Item description, positive quantity, unit, and optional material reference
 - Notes
+- Status and audit information
 
 Functions
 
-- Create
-- View
-- Share PDF
+- Admin-only independent create, Invoice conversion, Draft edit, Dispatch, and Draft cancellation
+- View permitted Delivery Challans
+- Preview or share a generated PDF where permitted
+
+Delivery Challans are non-financial documents: they never contain prices, discounts, tax, totals,
+payments, or payment status. They may be created independently or from an Issued Invoice. Invoice
+conversion preserves immutable Invoice ID and number references, copies only the Customer and
+permitted line snapshots, allows quantities no greater than the matching Invoice lines, and never
+modifies the Invoice. A second active Challan for the same Invoice is rejected. Quotation conversion
+is not implemented.
+
+The only lifecycle transitions are `DRAFT -> DISPATCHED` and `DRAFT -> CANCELLED`. Only Drafts are
+editable. Create and Draft edit never change Inventory. Dispatch is Admin-only and atomically
+checks stock, creates the corresponding `STOCK_OUT` records for material-linked lines, reduces
+Inventory, updates the Challan status, and records activity. Free-text lines do not affect Inventory.
+There is no dispatched-stock reversal in this phase.
+
+The PDF is non-financial and contains company identity, Challan number/status/date, Customer and
+delivery address, Invoice reference when present, vehicle/driver details, item descriptions,
+quantities, units, notes, dispatched-by text when applicable, received-by/signature blanks,
+authorized-signature area, generation date, and page numbers. It is generated in the app cache and
+previewed/shared through a FileProvider `content://` URI; no storage permission or filesystem URI is
+exposed.
+
+Known limitations: the Invoice-to-Delivery-Challan route exists but the current Invoice Details flow
+does not yet hand an Invoice ID to it, so the Orders list's create-from-Invoice action reports the
+localized unavailable-feature message. There is no Quotation conversion, delivery reversal, or
+remote-logo download for the PDF.
 
 ---
 

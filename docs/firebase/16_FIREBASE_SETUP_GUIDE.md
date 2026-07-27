@@ -218,7 +218,7 @@ Offline Persistence
 
 /invoices
 
-/deliveryChallans
+/delivery_challans
 
 /activityLogs
 
@@ -240,7 +240,7 @@ invoice/
 
 purchaseOrder/
 
-deliveryChallan/
+Delivery Challan PDFs are cache-only and are not uploaded to Firebase Storage in this phase.
 
 Only PDFs and images should be stored.
 

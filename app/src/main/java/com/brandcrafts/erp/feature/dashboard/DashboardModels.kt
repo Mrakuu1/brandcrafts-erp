@@ -14,7 +14,7 @@ data class AdminDashboardMetrics(
 )
 
 data class EmployeeDashboardMetrics(
-    val assignedTaskCount: Int,
+    val assignedTaskCount: Int?,
     val lowStockAlertCount: Int,
 )
 

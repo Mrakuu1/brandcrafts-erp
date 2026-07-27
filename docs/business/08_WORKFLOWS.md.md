@@ -29,8 +29,6 @@ Actor
 
 Admin
 
-Employee
-
 Flow
 
 Launch App
@@ -509,8 +507,6 @@ Actor
 
 Admin
 
-Employee
-
 Trigger
 
 Orders
@@ -519,31 +515,45 @@ Orders
 
 Delivery Challan
 
-Fields
+Independent Create
 
-Customer
+Validate active Customer, delivery address/date, and at least one positive-quantity line. In one
+transaction increment `counters/deliveryChallan`, generate `DC-000001`, write the Draft parent and
+stable item IDs, and write `DELIVERY_CHALLAN_CREATED`. This operation does not change Inventory.
 
-Vehicle
+Invoice Conversion
 
-Driver
+The source Invoice must be `ISSUED`. Copy the Customer reference and only material ID, description,
+quantity, and unit from selected Invoice lines; preserve the Invoice ID and number, enforce each
+requested quantity against its matching source line, and reject another active Challan for that
+Invoice. The transaction writes the counter, Draft parent, lines, and activity without changing the
+Invoice or Inventory. Quotation conversion is unsupported.
 
-Items
+Draft Edit
 
-Notes
+Read stale item IDs before the transaction, then reread the parent and require `DRAFT`. Atomically
+write retained/new items, delete stale items, preserve number/source/creation audit fields, and add
+`DELIVERY_CHALLAN_UPDATED`. The external stale-ID read is a documented concurrency limitation.
 
-Validation
+Dispatch
 
-Customer required
+Admin confirms Dispatch → transaction rereads the Draft parent and persisted items → verifies no
+existing `STOCK_OUT` record references the Challan → validates active material stock → reduces each
+material-linked inventory quantity and writes its Stock Out record → marks the Challan
+`DISPATCHED` and writes `DELIVERY_CHALLAN_DISPATCHED`. Free-text lines have no stock movement. Any
+failure aborts the whole transaction; no negative quantity or duplicate deduction is allowed.
 
-Items required
+Cancellation
 
-Success
+Admin may cancel only a Draft. The transaction changes status to `CANCELLED`, sets cancellation and
+update audit fields, and writes `DELIVERY_CHALLAN_CANCELLED`. It does not mutate Inventory.
+Dispatched or already cancelled Challans cannot be cancelled, and stock reversal is not implemented.
 
-Generate PDF
+PDF
 
-Share
-
-Activity Log
+The details action generates a paginated, non-financial PDF in app cache from the real Challan,
+Customer, and company configuration. It repeats item headers on later pages and is previewed/shared
+only through the existing FileProvider `content://` URI.
 
 ---
 

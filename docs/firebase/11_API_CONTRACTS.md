@@ -280,13 +280,21 @@ shareInvoice()
 
 Functions
 
+observeDeliveryChallans()
+
+getDeliveryChallan()
+
+getDeliveryChallanLines()
+
 createDeliveryChallan()
 
-updateDeliveryChallan()
+createDeliveryChallanFromInvoice()
 
-deleteDeliveryChallan()
+updateDraftDeliveryChallan()
 
-getDeliveryChallans()
+dispatchDeliveryChallan()
+
+cancelDraftDeliveryChallan()
 
 generateDeliveryChallanPdf()
 
@@ -370,7 +378,7 @@ Admin only.
 
 /invoices
 
-/deliveryChallans
+/delivery_challans
 
 /activityLogs
 

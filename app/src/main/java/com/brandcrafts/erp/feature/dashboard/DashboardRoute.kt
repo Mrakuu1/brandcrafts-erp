@@ -1,8 +1,11 @@
 package com.brandcrafts.erp.feature.dashboard
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.brandcrafts.erp.R
 import com.brandcrafts.erp.core.common.CurrentUserState
 import com.brandcrafts.erp.ui.LocalCurrentUser
@@ -10,7 +13,6 @@ import com.brandcrafts.erp.ui.components.EmptyState
 
 @Composable
 fun DashboardRoute(
-    uiState: DashboardUiState,
     onAddStockClick: () -> Unit,
     onInvoiceClick: () -> Unit,
     onQuotationClick: () -> Unit,
@@ -18,9 +20,10 @@ fun DashboardRoute(
     onStockInClick: () -> Unit,
     onStockOutClick: () -> Unit,
     onMaterialUsageClick: () -> Unit,
-    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: DashboardViewModel = hiltViewModel(),
 ) {
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
     when (val currentUser = LocalCurrentUser.current) {
         is CurrentUserState.Authenticated -> DashboardScreen(
             user = currentUser.user,
@@ -32,7 +35,7 @@ fun DashboardRoute(
             onStockInClick = onStockInClick,
             onStockOutClick = onStockOutClick,
             onMaterialUsageClick = onMaterialUsageClick,
-            onRetryClick = onRetryClick,
+            onRetryClick = viewModel::retry,
             modifier = modifier,
         )
         CurrentUserState.Unauthenticated -> EmptyState(

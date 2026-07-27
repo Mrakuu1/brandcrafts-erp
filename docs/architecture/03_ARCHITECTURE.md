@@ -418,6 +418,14 @@ using only the persisted invoice ID. Form success opens Invoice Details, Details
 the list, and form back returns to its previous destination. No Invoice route accepts a role,
 customer type, payment state, or other authorization value as a navigation argument.
 
+The Delivery Challan tab routes to its list in the same NavHost. The list opens independent create,
+Draft edit, and details using only persisted Challan IDs. Form success replaces the form with Details;
+Details back returns to the prior destination. A parameterized Invoice-conversion destination accepts
+only a persisted Invoice ID and resolves all source data internally. The current Orders list has no
+Invoice ID context, so its create-from-Invoice action intentionally uses localized unavailable
+feedback until Invoice Details supplies that ID. No Delivery Challan route accepts a role, status,
+source type, or authorization value.
+
 ---
 
 # Dependency Injection

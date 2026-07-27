@@ -1,0 +1,10 @@
+package com.brandcrafts.erp.feature.deliverychallan
+
+import androidx.annotation.StringRes
+import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.result.DeliveryChallanError
+import com.brandcrafts.erp.core.result.DeliveryChallanFailure
+
+data class DeliveryChallanPresentationMessage(@StringRes val messageRes: Int, val unauthorized: Boolean = false)
+object DeliveryChallanPresentationErrorMapper { fun map(throwable: Throwable): DeliveryChallanPresentationMessage = (throwable as? DeliveryChallanFailure)?.error?.message() ?: DeliveryChallanPresentationMessage(R.string.delivery_challan_error_generic) }
+private fun DeliveryChallanError.message() = when (this) { DeliveryChallanError.Unauthenticated, DeliveryChallanError.UserProfileMissing, DeliveryChallanError.InactiveUser, DeliveryChallanError.PermissionDenied -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_unauthorized, true); DeliveryChallanError.CustomerRequired -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_customer_required); DeliveryChallanError.DeliveryAddressRequired -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_address_required); DeliveryChallanError.DeliveryDateRequired -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_date_required); DeliveryChallanError.EmptyItemList -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_items_required); DeliveryChallanError.InvalidQuantity -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_quantity); DeliveryChallanError.InvalidUnit -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_unit); DeliveryChallanError.InsufficientStock -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_insufficient_stock); DeliveryChallanError.DuplicateDispatchStockOut -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_duplicate_dispatch); else -> DeliveryChallanPresentationMessage(R.string.delivery_challan_error_generic) }

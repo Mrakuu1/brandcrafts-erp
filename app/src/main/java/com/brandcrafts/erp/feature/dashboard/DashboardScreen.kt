@@ -169,11 +169,13 @@ private fun EmployeeDashboardContent(
                 )
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    StatCard(
-                        title = stringResource(R.string.dashboard_assigned_tasks),
-                        value = metrics.assignedTaskCount.toString(),
-                        modifier = Modifier.weight(1f),
-                    )
+                    metrics.assignedTaskCount?.let { assignedTaskCount ->
+                        StatCard(
+                            title = stringResource(R.string.dashboard_assigned_tasks),
+                            value = assignedTaskCount.toString(),
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     StatCard(
                         title = stringResource(R.string.dashboard_low_stock_alerts),
                         value = metrics.lowStockAlertCount.toString(),
