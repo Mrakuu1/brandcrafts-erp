@@ -9,7 +9,6 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.Query
 import javax.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,11 +18,18 @@ import kotlin.coroutines.resumeWithException
 
 class FirestoreInvoiceRemoteDataSource @Inject constructor(private val firestore: FirebaseFirestore) : InvoiceRemoteDataSource {
     override fun observeInvoiceParents() = callbackFlow {
-        val registration = firestore.collection(INVOICES).orderBy(INVOICE_DATE, Query.Direction.DESCENDING)
+        // Parent-only listener. Local ordering keeps legacy invoices without a
+        // Firestore Timestamp from being hidden by an orderBy query.
+        val registration = firestore.collection(INVOICES)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) close(mapFailure(error))
                 else if (snapshot != null) try {
-                    trySend(snapshot.documents.map(::parentDto).map { it.toSummaryDomain() })
+                    trySend(
+                        snapshot.documents
+                            .map(::parentDto)
+                            .map { it.toSummaryDomain() }
+                            .sortedByDescending { it.invoiceDateMillis },
+                    )
                 } catch (failure: Throwable) { close(failure) }
             }
         awaitClose(registration::remove)
@@ -40,9 +46,15 @@ class FirestoreInvoiceRemoteDataSource @Inject constructor(private val firestore
             .get().awaitInvoice().documents.map(::lineDto)
     }
 
-    private fun parentDto(d: DocumentSnapshot) = InvoiceDto(d.id, d.getString(NUMBER), d.getString(CUSTOMER), d.get(INVOICE_DATE), d.get(DUE_DATE), d.getString(STATUS), d.getString(SUBTOTAL), d.getString(DISCOUNT), d.getString(TAX), d.getString(GRAND_TOTAL), d.getString(PAID), d.getString(PAYMENT_STATUS), d.getString(REMARKS), d.getTimestamp(CREATED_AT), d.getString(CREATED_BY), d.getTimestamp(UPDATED_AT), d.getString(UPDATED_BY), d.getTimestamp(ISSUED_AT), d.getString(ISSUED_BY), d.getTimestamp(CANCELLED_AT), d.getString(CANCELLED_BY))
+    private fun parentDto(d: DocumentSnapshot) = InvoiceDto(d.id, d.getString(NUMBER), d.getString(CUSTOMER), d.get(INVOICE_DATE), d.get(DUE_DATE), d.getString(STATUS), decimalText(d, SUBTOTAL), decimalText(d, DISCOUNT), decimalText(d, TAX), decimalText(d, GRAND_TOTAL), decimalText(d, PAID), d.getString(PAYMENT_STATUS), d.getString(REMARKS), d.getTimestamp(CREATED_AT), d.getString(CREATED_BY), d.getTimestamp(UPDATED_AT), d.getString(UPDATED_BY), d.getTimestamp(ISSUED_AT), d.getString(ISSUED_BY), d.getTimestamp(CANCELLED_AT), d.getString(CANCELLED_BY))
     private fun lineDto(d: DocumentSnapshot) = InvoiceLineDto(d.id, d.getString(MATERIAL), d.getString(DESCRIPTION), d.getString(QUANTITY), d.getString(UNIT), d.getString(UNIT_PRICE), d.getString(DISCOUNT_PERCENT), d.getString(TAX_PERCENT), d.getString(LINE_SUBTOTAL), d.getString(LINE_DISCOUNT), d.getString(TAXABLE), d.getString(LINE_TAX), d.getString(LINE_TOTAL), d.getLong(SORT_ORDER)?.toInt())
     private fun requireId(id: String) { if (id.isBlank()) throw InvoiceFailure(InvoiceError.InvoiceNotFound) }
+    private fun decimalText(document: DocumentSnapshot, field: String): String? = when (val value = document.get(field)) {
+        null -> null
+        is String -> value
+        is Number -> value.toString()
+        else -> throw InvoiceFailure(InvoiceError.MalformedStoredDecimal)
+    }
     private fun mapFailure(error: Throwable): Throwable = when (error as? FirebaseFirestoreException) {
         null -> InvoiceFailure(InvoiceError.RepositoryUnavailable)
         else -> InvoiceFailure(

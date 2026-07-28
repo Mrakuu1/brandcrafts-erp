@@ -2,6 +2,8 @@ package com.brandcrafts.erp.di
 
 import com.brandcrafts.erp.data.datasource.auth.FirebaseAuthenticationDataSource
 import com.brandcrafts.erp.data.datasource.auth.FirebaseAuthenticationDataSourceImpl
+import com.brandcrafts.erp.data.datasource.activity.ActivityLogRemoteDataSource
+import com.brandcrafts.erp.data.datasource.activity.FirestoreActivityLogRemoteDataSource
 import com.brandcrafts.erp.data.datasource.contact.ContactsRemoteDataSource
 import com.brandcrafts.erp.data.datasource.contact.FirestoreContactsRemoteDataSource
 import com.brandcrafts.erp.data.datasource.employee.EmployeeRemoteDataSource
@@ -15,6 +17,7 @@ import com.brandcrafts.erp.data.datasource.stock.StockRemoteDataSource
 import com.brandcrafts.erp.data.datasource.stock.FirestoreStockOutRemoteDataSource
 import com.brandcrafts.erp.data.datasource.stock.StockOutRemoteDataSource
 import com.brandcrafts.erp.data.repository.AuthenticationRepositoryImpl
+import com.brandcrafts.erp.data.repository.ActivityLogRepositoryImpl
 import com.brandcrafts.erp.data.repository.ContactRepositoryImpl
 import com.brandcrafts.erp.data.repository.EmployeeRepositoryImpl
 import com.brandcrafts.erp.data.repository.InventoryRepositoryImpl
@@ -27,6 +30,7 @@ import com.brandcrafts.erp.data.repository.InventoryTransactionRepositoryImpl
 import com.brandcrafts.erp.data.datasource.quotation.QuotationRemoteDataSource
 import com.brandcrafts.erp.data.datasource.quotation.FirestoreQuotationRemoteDataSource
 import com.brandcrafts.erp.data.repository.QuotationRepositoryImpl
+import com.brandcrafts.erp.data.repository.QuotationPdfRepositoryImpl
 import com.brandcrafts.erp.data.datasource.company.CompanyConfigRemoteDataSource
 import com.brandcrafts.erp.data.datasource.company.FirestoreCompanyConfigRemoteDataSource
 import com.brandcrafts.erp.data.repository.CompanyConfigRepositoryImpl
@@ -48,6 +52,7 @@ import com.brandcrafts.erp.data.datasource.invoice.InvoicePaymentRemoteDataSourc
 import com.brandcrafts.erp.data.datasource.invoice.InvoiceRemoteDataSource
 import com.brandcrafts.erp.data.repository.InvoiceRepositoryImpl
 import com.brandcrafts.erp.domain.repository.AuthenticationRepository
+import com.brandcrafts.erp.domain.repository.ActivityLogRepository
 import com.brandcrafts.erp.domain.repository.ContactRepository
 import com.brandcrafts.erp.domain.repository.EmployeeRepository
 import com.brandcrafts.erp.domain.repository.InventoryRepository
@@ -58,6 +63,7 @@ import com.brandcrafts.erp.domain.repository.StockOutRepository
 import com.brandcrafts.erp.domain.repository.MaterialUsageRepository
 import com.brandcrafts.erp.domain.repository.InventoryTransactionRepository
 import com.brandcrafts.erp.domain.repository.QuotationRepository
+import com.brandcrafts.erp.domain.repository.QuotationPdfRepository
 import com.brandcrafts.erp.domain.repository.CompanyConfigRepository
 import com.brandcrafts.erp.domain.repository.PurchaseOrderRepository
 import com.brandcrafts.erp.domain.repository.PurchaseOrderPdfRepository
@@ -70,6 +76,8 @@ import javax.inject.Singleton
 
 @Module @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds @Singleton abstract fun bindActivityLogRemoteDataSource(impl: FirestoreActivityLogRemoteDataSource): ActivityLogRemoteDataSource
+    @Binds @Singleton abstract fun bindActivityLogRepository(impl: ActivityLogRepositoryImpl): ActivityLogRepository
     @Binds @Singleton abstract fun bindAuthenticationDataSource(impl: FirebaseAuthenticationDataSourceImpl): FirebaseAuthenticationDataSource
     @Binds @Singleton abstract fun bindAuthenticationRepository(impl: AuthenticationRepositoryImpl): AuthenticationRepository
     @Binds @Singleton abstract fun bindInventoryRemoteDataSource(impl: FirestoreInventoryRemoteDataSource): InventoryRemoteDataSource
@@ -87,6 +95,7 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindEmployeeRepository(impl: EmployeeRepositoryImpl): EmployeeRepository
     @Binds @Singleton abstract fun bindQuotationRemoteDataSource(impl: FirestoreQuotationRemoteDataSource): QuotationRemoteDataSource
     @Binds @Singleton abstract fun bindQuotationRepository(impl: QuotationRepositoryImpl): QuotationRepository
+    @Binds @Singleton abstract fun bindQuotationPdfRepository(impl: QuotationPdfRepositoryImpl): QuotationPdfRepository
     @Binds @Singleton abstract fun bindCompanyConfigRemoteDataSource(impl: FirestoreCompanyConfigRemoteDataSource): CompanyConfigRemoteDataSource
     @Binds @Singleton abstract fun bindCompanyConfigRepository(impl: CompanyConfigRepositoryImpl): CompanyConfigRepository
     @Binds @Singleton abstract fun bindPurchaseOrderRemoteDataSource(impl: FirestorePurchaseOrderRemoteDataSource): PurchaseOrderRemoteDataSource

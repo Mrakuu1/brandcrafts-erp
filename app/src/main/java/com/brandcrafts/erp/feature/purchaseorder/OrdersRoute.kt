@@ -27,6 +27,7 @@ import com.brandcrafts.erp.feature.deliverychallan.DeliveryChallanListRoute
 fun OrdersRoute(
     onCreateQuotation: () -> Unit,
     onEditQuotation: (String) -> Unit,
+    onOpenQuotation: (String) -> Unit,
     onCreatePurchaseOrder: () -> Unit,
     onOpenPurchaseOrder: (String) -> Unit,
     onEditPurchaseOrder: (String) -> Unit,
@@ -55,7 +56,7 @@ fun OrdersRoute(
             }
         }
         when (tabs[selectedIndex]) {
-            OrdersTab.Quotations -> QuotationRoute(onCreateQuotation, onEditQuotation)
+            OrdersTab.Quotations -> QuotationRoute(onCreateQuotation, onEditQuotation, onOpenQuotation)
             OrdersTab.PurchaseOrders -> PurchaseOrderRoute(onCreatePurchaseOrder, onOpenPurchaseOrder, onEditPurchaseOrder, onUnauthorized)
             OrdersTab.Invoices -> InvoiceListRoute(
                 onCreateInvoice = onCreateInvoice,

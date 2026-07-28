@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
 import com.brandcrafts.erp.ui.components.AppTextField
 import com.brandcrafts.erp.ui.components.EmptyState
@@ -42,7 +43,6 @@ import com.brandcrafts.erp.ui.components.OutlinedButton
 import com.brandcrafts.erp.ui.components.SectionHeader
 import java.math.BigDecimal
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.text.KeyboardOptions
@@ -417,4 +417,4 @@ private fun formatDate(value: Long): String =
     DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.US).format(Date(value))
 
 private fun formatCurrency(value: BigDecimal): String =
-    NumberFormat.getCurrencyInstance(Locale.US).format(value)
+    formatIndianCurrency(value)

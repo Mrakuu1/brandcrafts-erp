@@ -13,10 +13,10 @@ fun DocumentSnapshot.toFirestoreInventoryItem(): FirestoreInventoryItem = Firest
     sku = getString("sku") ?: "",
     category = getString("category") ?: "",
     unit = getString("unit") ?: "",
-    availableQuantity = getDouble("availableQuantity") ?: 0.0,
-    minimumQuantity = getDouble("minimumQuantity") ?: 0.0,
-    purchasePrice = getDouble("purchasePrice") ?: 0.0,
-    sellingPrice = getDouble("sellingPrice") ?: 0.0,
+    availableQuantity = inventoryNumberOrZero("availableQuantity"),
+    minimumQuantity = inventoryNumberOrZero("minimumQuantity"),
+    purchasePrice = inventoryNumberOrZero("purchasePrice"),
+    sellingPrice = inventoryNumberOrZero("sellingPrice"),
     description = getString("description") ?: "",
     active = getBoolean("active") ?: false,
     createdAt = getTimestamp("createdAt"),
@@ -111,3 +111,22 @@ fun FirestoreInventoryItem.toUpdateMap(): Map<String, Any?> = mapOf(
     "updatedAt" to FieldValue.serverTimestamp(),
     "updatedBy" to updatedBy,
 )
+
+/**
+ * Older material records may contain canonical decimal strings, whereas newer
+ * master-record writes use Firestore numeric values. Accept both forms while
+ * refusing values that cannot represent a finite number.
+ */
+internal fun DocumentSnapshot.inventoryNumberOrZero(field: String): Double {
+    val value = get(field) ?: return 0.0
+    val number = when (value) {
+        is Number -> value.toDouble()
+        is String -> value.trim().toDoubleOrNull()
+        else -> null
+    }
+    return number?.takeIf(Double::isFinite)
+        ?: throw InventoryDocumentMappingException(field)
+}
+
+internal class InventoryDocumentMappingException(field: String) :
+    IllegalArgumentException("Inventory field '$field' is not a valid number")

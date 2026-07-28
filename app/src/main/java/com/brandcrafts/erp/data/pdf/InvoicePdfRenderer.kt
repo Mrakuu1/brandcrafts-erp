@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.domain.model.CompanyConfig
 import com.brandcrafts.erp.domain.model.Contact
 import com.brandcrafts.erp.domain.model.Invoice
@@ -13,7 +14,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.math.BigDecimal
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -213,7 +213,7 @@ class InvoicePdfRenderer @Inject constructor(
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.US).format(Date(value))
 
     private fun formatCurrency(value: BigDecimal): String =
-        NumberFormat.getCurrencyInstance(Locale.US).format(value)
+        formatIndianCurrency(value)
 
     private fun formatPercent(value: BigDecimal): String =
         context.getString(R.string.invoice_percentage_value, value.toPlainString())

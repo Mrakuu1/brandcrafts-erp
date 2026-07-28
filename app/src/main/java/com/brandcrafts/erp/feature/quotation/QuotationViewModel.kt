@@ -7,6 +7,7 @@ import com.brandcrafts.erp.domain.model.Quotation
 import com.brandcrafts.erp.domain.model.QuotationStatus
 import com.brandcrafts.erp.domain.usecase.contact.ObserveContactsUseCase
 import com.brandcrafts.erp.domain.usecase.quotation.ObserveQuotationsUseCase
+import com.brandcrafts.erp.domain.usecase.quotation.UpdateQuotationStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 class QuotationViewModel @Inject constructor(
     private val observeQuotations: ObserveQuotationsUseCase,
     private val observeContacts: ObserveContactsUseCase,
+    private val updateQuotationStatus: UpdateQuotationStatusUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(QuotationUiState())
     val state = _state.asStateFlow()
@@ -42,6 +44,20 @@ class QuotationViewModel @Inject constructor(
     }
 
     fun retry() = load()
+
+    fun approve(id: String) = updateStatus(id, QuotationStatus.APPROVED)
+
+    fun reject(id: String) = updateStatus(id, QuotationStatus.REJECTED)
+
+    private fun updateStatus(id: String, status: QuotationStatus) {
+        viewModelScope.launch {
+            updateQuotationStatus(id, status).onFailure {
+                if (quotations.isEmpty()) {
+                    _state.value = _state.value.copy(content = QuotationUiState.Content.Error)
+                }
+            }
+        }
+    }
 
     private fun load() {
         quotationsJob?.cancel()

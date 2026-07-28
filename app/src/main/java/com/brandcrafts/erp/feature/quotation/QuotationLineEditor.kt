@@ -19,9 +19,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.ui.components.AppTextField
 import java.math.BigDecimal
-import java.text.NumberFormat
 
 @Composable
 fun QuotationLineEditor(
@@ -121,7 +121,7 @@ internal fun QuotationAmountRow(label: String, amount: BigDecimal?, emphasized: 
 }
 
 internal fun decimalKeyboardOptions() = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal)
-internal fun formatQuotationCurrency(value: BigDecimal): String = NumberFormat.getCurrencyInstance().format(value)
+internal fun formatQuotationCurrency(value: BigDecimal): String = formatIndianCurrency(value)
 
 @Composable
 internal fun QuotationFieldError.toErrorText(): String = stringResource(

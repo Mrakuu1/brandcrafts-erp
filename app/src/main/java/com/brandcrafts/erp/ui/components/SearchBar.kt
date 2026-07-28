@@ -1,6 +1,7 @@
 package com.brandcrafts.erp.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -10,6 +11,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 
 @Composable
@@ -26,6 +28,7 @@ fun SearchBar(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
         enabled = enabled,
         singleLine = true,
         placeholder = { androidx.compose.material3.Text(text = placeholder) },

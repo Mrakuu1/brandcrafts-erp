@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +27,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
+import com.brandcrafts.erp.domain.model.InvoiceStatus
 import com.brandcrafts.erp.domain.model.Quotation
 import com.brandcrafts.erp.domain.model.QuotationStatus
 import com.brandcrafts.erp.ui.components.EmptyState
@@ -37,7 +41,6 @@ import com.brandcrafts.erp.ui.components.StatusTone
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 import java.math.BigDecimal
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 
 @Composable
@@ -46,6 +49,9 @@ fun QuotationScreen(
     canManageQuotations: Boolean,
     onCreateQuotation: () -> Unit,
     onEditQuotation: (String) -> Unit,
+    onOpenQuotation: (String) -> Unit,
+    onApproveQuotation: (String) -> Unit,
+    onRejectQuotation: (String) -> Unit,
     onSearch: (String) -> Unit,
     onStatus: (QuotationStatus?) -> Unit,
     onRetry: () -> Unit,
@@ -59,12 +65,14 @@ fun QuotationScreen(
             onActionClick = if (canManageQuotations) onCreateQuotation else null,
         )
         SearchBar(state.query, onSearch, stringResource(R.string.quotation_search), modifier = Modifier.padding(horizontal = 16.dp))
-        Row(
+        LazyRow(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FilterChip(selected = state.status == null, onClick = { onStatus(null) }, label = { Text(stringResource(R.string.quotation_all)) })
-            QuotationStatus.entries.forEach { status ->
+            item {
+                FilterChip(selected = state.status == null, onClick = { onStatus(null) }, label = { Text(stringResource(R.string.quotation_all)) })
+            }
+            items(QuotationStatus.entries) { status ->
                 FilterChip(selected = state.status == status, onClick = { onStatus(status) }, label = { Text(stringResource(status.res())) })
             }
         }
@@ -85,7 +93,11 @@ fun QuotationScreen(
                     QuotationListItem(
                         item = item,
                         canEdit = canManageQuotations && item.quotation.status == QuotationStatus.DRAFT,
+                        canChangeStatus = canManageQuotations && item.quotation.status == QuotationStatus.DRAFT,
                         onEdit = { onEditQuotation(item.quotation.id) },
+                        onOpen = { onOpenQuotation(item.quotation.id) },
+                        onApprove = { onApproveQuotation(item.quotation.id) },
+                        onReject = { onRejectQuotation(item.quotation.id) },
                     )
                 }
             }
@@ -94,10 +106,19 @@ fun QuotationScreen(
 }
 
 @Composable
-private fun QuotationListItem(item: QuotationListItem, canEdit: Boolean, onEdit: () -> Unit) {
+private fun QuotationListItem(
+    item: QuotationListItem,
+    canEdit: Boolean,
+    canChangeStatus: Boolean,
+    onEdit: () -> Unit,
+    onOpen: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
+) {
     val quotation = item.quotation
     Card(
-        Modifier.fillMaxWidth(),
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         ListItem(
@@ -116,6 +137,16 @@ private fun QuotationListItem(item: QuotationListItem, canEdit: Boolean, onEdit:
                     if (canEdit) {
                         IconButton(onClick = onEdit) {
                             Icon(Icons.Outlined.Edit, stringResource(R.string.quotation_edit))
+                        }
+                    }
+                    if (canChangeStatus) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            TextButton(onClick = onApprove) {
+                                Text(stringResource(R.string.quotation_approve))
+                            }
+                            TextButton(onClick = onReject) {
+                                Text(stringResource(R.string.quotation_reject))
+                            }
                         }
                     }
                 }
@@ -139,7 +170,7 @@ private fun tone(status: QuotationStatus) = when (status) {
 }
 
 private fun formatDate(value: Long?) = value?.let { DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(it)) } ?: "—"
-private fun currency(value: BigDecimal) = NumberFormat.getCurrencyInstance().format(value)
+private fun currency(value: BigDecimal) = formatIndianCurrency(value)
 
 @Preview(showBackground = true)
 @Composable
@@ -148,42 +179,42 @@ private fun QuotationListAdminPreview() {
         QuotationScreen(
             state = QuotationUiState(content = QuotationUiState.Content.Loaded, visible = listOf(QuotationListItem(Quotation("1", "QT-000001", "c", 0, 0, QuotationStatus.DRAFT, BigDecimal("1250.00"), "", "", ""), "Acme Studio"))),
             canManageQuotations = true,
-            onCreateQuotation = {}, onEditQuotation = {}, onSearch = {}, onStatus = {}, onRetry = {},
+            onCreateQuotation = {}, onEditQuotation = {}, onOpenQuotation = {}, onApproveQuotation = {}, onRejectQuotation = {}, onSearch = {}, onStatus = {}, onRetry = {},
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListEmployeePreview() { BrandCraftsTheme { QuotationScreen(previewQuotationList(QuotationStatus.APPROVED), false, {}, {}, {}, {}, {}) } }
+private fun QuotationListEmployeePreview() { BrandCraftsTheme { QuotationScreen(previewQuotationList(QuotationStatus.APPROVED), false, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListMultiplePreview() { BrandCraftsTheme { QuotationScreen(previewQuotationList(QuotationStatus.DRAFT, QuotationStatus.APPROVED, QuotationStatus.REJECTED, QuotationStatus.EXPIRED), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListMultiplePreview() { BrandCraftsTheme { QuotationScreen(previewQuotationList(QuotationStatus.DRAFT, QuotationStatus.APPROVED, QuotationStatus.REJECTED, QuotationStatus.EXPIRED), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListMissingCustomerPreview() { BrandCraftsTheme { QuotationScreen(previewQuotationList(QuotationStatus.DRAFT, customerName = null), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListMissingCustomerPreview() { BrandCraftsTheme { QuotationScreen(previewQuotationList(QuotationStatus.DRAFT, customerName = null), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListLoadingPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListLoadingPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListEmptyPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(content = QuotationUiState.Content.Empty), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListEmptyPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(content = QuotationUiState.Content.Empty), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListNoResultsPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(content = QuotationUiState.Content.Empty, query = "missing"), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListNoResultsPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(content = QuotationUiState.Content.Empty, query = "missing"), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true)
 @Composable
-private fun QuotationListErrorPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(content = QuotationUiState.Content.Error), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListErrorPreview() { BrandCraftsTheme { QuotationScreen(QuotationUiState(content = QuotationUiState.Content.Error), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun QuotationListDarkPreview() { BrandCraftsTheme(darkTheme = true) { QuotationScreen(previewQuotationList(QuotationStatus.DRAFT), true, {}, {}, {}, {}, {}) } }
+private fun QuotationListDarkPreview() { BrandCraftsTheme(darkTheme = true) { QuotationScreen(previewQuotationList(QuotationStatus.DRAFT), true, {}, {}, {}, {}, {}, {}, {}, {}) } }
 
 private fun previewQuotationList(vararg statuses: QuotationStatus, customerName: String? = "Acme Studio"): QuotationUiState {
     val items = statuses.mapIndexed { index, status ->

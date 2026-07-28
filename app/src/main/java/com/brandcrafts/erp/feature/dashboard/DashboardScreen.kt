@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.domain.model.AuthenticatedUser
 import com.brandcrafts.erp.domain.model.UserRole
 import com.brandcrafts.erp.ui.components.EmptyState
@@ -30,8 +31,6 @@ import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 import java.math.BigDecimal
-import java.text.NumberFormat
-import java.util.Currency
 
 @Composable
 fun DashboardScreen(
@@ -100,6 +99,14 @@ private fun AdminDashboardContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { SectionHeader(title = stringResource(R.string.dashboard_business_snapshot)) }
+        if (uiState.hasPartialDataFailure) {
+            item {
+                DashboardUnavailableSection(
+                    title = stringResource(R.string.dashboard_metrics_unavailable_title),
+                    description = stringResource(R.string.dashboard_metrics_unavailable_description),
+                )
+            }
+        }
         item {
             val metrics = uiState.adminMetrics
             if (metrics == null) {
@@ -109,22 +116,22 @@ private fun AdminDashboardContent(
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        StatCard(
-                            title = stringResource(R.string.dashboard_total_sales),
-                            value = metrics.totalSales.asCurrencyText(),
-                            modifier = Modifier.weight(1f),
-                        )
-                        StatCard(
-                            title = stringResource(R.string.dashboard_outstanding_payments),
-                            value = metrics.outstandingPayments.asCurrencyText(),
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    StatCard(
-                        title = stringResource(R.string.dashboard_low_stock_count),
-                        value = metrics.lowStockCount.toString(),
+                    val financialMetrics = listOfNotNull(
+                        metrics.totalSales?.let { R.string.dashboard_total_sales to it.asCurrencyText() },
+                        metrics.outstandingPayments?.let { R.string.dashboard_outstanding_payments to it.asCurrencyText() },
+                        metrics.lowStockCount?.let { R.string.dashboard_low_stock_count to it.toString() },
                     )
+                    if (financialMetrics.isNotEmpty()) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            financialMetrics.take(2).forEach { (label, value) ->
+                                StatCard(title = stringResource(label), value = value, modifier = Modifier.weight(1f))
+                            }
+                        }
+                        financialMetrics.drop(2).forEach { (label, value) ->
+                            StatCard(title = stringResource(label), value = value)
+                        }
+                    }
+                    DashboardOptionalMetrics(metrics)
                 }
             }
         }
@@ -143,6 +150,37 @@ private fun AdminDashboardContent(
         item { LowStockAlertList(alerts = uiState.lowStockAlerts) }
         item { SectionHeader(title = stringResource(R.string.dashboard_recent_activities)) }
         item { DashboardActivityList(activities = uiState.recentActivities) }
+    }
+}
+
+@Composable
+private fun DashboardOptionalMetrics(metrics: AdminDashboardMetrics) {
+    val metricsToShow = listOfNotNull(
+        metrics.employeeCount?.let { R.string.dashboard_employee_count to it },
+        metrics.customerCount?.let { R.string.dashboard_customer_count to it },
+        metrics.quotationCount?.let { R.string.dashboard_quotation_count to it },
+        metrics.invoiceCount?.let { R.string.dashboard_invoice_count to it },
+        metrics.purchaseOrderCount?.let { R.string.dashboard_purchase_order_count to it },
+        metrics.deliveryChallanCount?.let { R.string.dashboard_delivery_challan_count to it },
+        metrics.draftQuotationCount?.let { R.string.dashboard_draft_quotation_count to it },
+        metrics.issuedInvoiceCount?.let { R.string.dashboard_issued_invoice_count to it },
+        metrics.approvedPurchaseOrderCount?.let { R.string.dashboard_approved_purchase_order_count to it },
+        metrics.dispatchedDeliveryChallanCount?.let { R.string.dashboard_dispatched_delivery_challan_count to it },
+    )
+    if (metricsToShow.isNotEmpty()) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            metricsToShow.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    row.forEach { (label, value) ->
+                        StatCard(
+                            title = stringResource(label),
+                            value = value.toString(),
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -227,7 +265,7 @@ private fun DashboardActivityList(activities: List<DashboardActivity>) {
             activities.forEach { activity ->
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     ListItem(
-                        headlineContent = { Text(activity.title) },
+                        headlineContent = { Text(stringResource(activity.titleRes)) },
                         supportingContent = { Text(activity.description) },
                         trailingContent = {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -309,9 +347,7 @@ private fun LowStockAlertList(alerts: List<LowStockAlert>) {
 
 private data class DashboardAction(val label: String, val onClick: () -> Unit)
 
-private fun DashboardCurrencyAmount.asCurrencyText(): String = NumberFormat.getCurrencyInstance().apply {
-    currency = Currency.getInstance(currencyCode)
-}.format(amount)
+private fun DashboardCurrencyAmount.asCurrencyText(): String = formatIndianCurrency(amount)
 
 private fun DashboardActivityStatus.labelRes(): Int = when (this) {
     DashboardActivityStatus.PENDING -> R.string.dashboard_status_pending
@@ -420,10 +456,20 @@ private fun previewLoadedState() = DashboardUiState.Loaded(
         totalSales = DashboardCurrencyAmount(BigDecimal("84500"), "INR"),
         outstandingPayments = DashboardCurrencyAmount(BigDecimal("12000"), "INR"),
         lowStockCount = 3,
+        employeeCount = 5,
+        customerCount = 12,
+        quotationCount = 9,
+        invoiceCount = 7,
+        purchaseOrderCount = 3,
+        deliveryChallanCount = 4,
+        draftQuotationCount = 2,
+        issuedInvoiceCount = 5,
+        approvedPurchaseOrderCount = 1,
+        dispatchedDeliveryChallanCount = 2,
     ),
     employeeMetrics = EmployeeDashboardMetrics(assignedTaskCount = 2, lowStockAlertCount = 3),
     recentActivities = listOf(
-        DashboardActivity("activity-1", "Invoice created", "INV-0001025", "10 min ago", DashboardActivityStatus.COMPLETED),
+        DashboardActivity("activity-1", R.string.dashboard_activity_invoice, "INV-0001025", "10 min ago", DashboardActivityStatus.COMPLETED),
     ),
     assignedTasks = listOf(
         DashboardTask("task-1", "Prepare vinyl stock", "Update the material usage record", DashboardTaskStatus.IN_PROGRESS),

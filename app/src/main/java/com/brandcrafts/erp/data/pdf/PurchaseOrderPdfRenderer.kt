@@ -4,13 +4,13 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.domain.model.CompanyConfig
 import com.brandcrafts.erp.domain.model.Contact
 import com.brandcrafts.erp.domain.model.PurchaseOrder
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -72,7 +72,7 @@ class PurchaseOrderPdfRenderer @Inject constructor(
             }
         }
 
-    private fun money(value: java.math.BigDecimal): String = NumberFormat.getCurrencyInstance(Locale.US).format(value)
+    private fun money(value: java.math.BigDecimal): String = formatIndianCurrency(value)
 
     private fun com.brandcrafts.erp.domain.model.PurchaseOrderStatus.labelRes(): Int = when (this) {
         com.brandcrafts.erp.domain.model.PurchaseOrderStatus.DRAFT -> R.string.purchase_order_status_draft

@@ -36,7 +36,7 @@ class QuotationRepositoryImpl @Inject constructor(
         val lines=header.reference.collection("items").orderBy("sortOrder").get().await().documents.map { item ->
             QuotationLineItem(item.id,item.getString("materialId")?:throw IllegalArgumentException(),item.getString("description")?:throw IllegalArgumentException(),decimal(item,"quantity"),item.getString("unit")?:throw IllegalArgumentException(),decimal(item,"unitPrice"),decimal(item,"discountPercent"),decimal(item,"taxPercent"),decimal(item,"lineTotal"))
         };require(lines.isNotEmpty())
-        Quotation(header.id,header.getString("documentNumber")?:throw IllegalArgumentException(),header.getString("contactId")?:throw IllegalArgumentException(),header.getTimestamp("date")?.toDate()?.time,header.getTimestamp("validUntil")?.toDate()?.time,QuotationStatus.valueOf(header.getString("status")?:throw IllegalArgumentException()),decimal(header,"grandTotal"),header.getString("pdfUrl")?:"",header.getString("createdBy")?:"",header.getString("remarks")?:"",lines)
+        Quotation(header.id,header.getString("documentNumber")?:throw IllegalArgumentException(),header.getString("contactId")?:throw IllegalArgumentException(),businessDate(header, "date", required = true),businessDate(header, "validUntil", required = false),QuotationStatus.valueOf(header.getString("status")?:throw IllegalArgumentException()),decimal(header,"grandTotal"),header.getString("pdfUrl")?:"",header.getString("createdBy")?:"",header.getString("remarks")?:"",lines)
     }
     override suspend fun createQuotation(draft: QuotationDraft): Result<String> = writeCreate(draft)
     override suspend fun updateQuotation(id: String, draft: QuotationDraft): Result<Unit> = runCatching {
@@ -58,6 +58,24 @@ class QuotationRepositoryImpl @Inject constructor(
             draft.lines.forEachIndexed { index,line -> val item=if(line.id==null)items.document()else items.document(line.id);val c=calculator.line(QuotationCalculationLine(line.quantity,line.unitPrice,line.discountPercent,line.taxPercent));tx.set(item,mapOf("itemId" to item.id,"materialId" to line.materialId,"description" to line.description,"quantity" to line.quantity.toPlainString(),"unit" to line.unit,"unitPrice" to line.unitPrice.toPlainString(),"discountPercent" to line.discountPercent.toPlainString(),"taxPercent" to line.taxPercent.toPlainString(),"lineSubtotal" to c.subtotal.plain(),"lineDiscount" to c.discount.plain(),"taxableAmount" to c.taxable.plain(),"lineTax" to c.tax.plain(),"lineTotal" to c.total.plain(),"sortOrder" to index)) }
         }.await()
     }
+    override suspend fun updateQuotationStatus(id: String, status: QuotationStatus): Result<Unit> = runCatching {
+        require(status == QuotationStatus.APPROVED || status == QuotationStatus.REJECTED)
+        val user = admin() ?: throw SecurityException()
+        val reference = firestore.collection("documents").document(id)
+        firestore.runTransaction { transaction ->
+            val current = transaction.get(reference)
+            check(current.exists() && current.getString("type") == "QUOTATION")
+            check(current.getString("status") == QuotationStatus.DRAFT.name)
+            transaction.update(
+                reference,
+                mapOf(
+                    "status" to status.name,
+                    "updatedBy" to user.uid,
+                    "updatedAt" to FieldValue.serverTimestamp(),
+                ),
+            )
+        }.await()
+    }
     private suspend fun writeCreate(draft:QuotationDraft):Result<String> = runCatching {
         val user=admin()?:throw SecurityException();validate(draft)
         val totals=calculator.totals(draft.lines.map{QuotationCalculationLine(it.quantity,it.unitPrice,it.discountPercent,it.taxPercent)})
@@ -75,5 +93,12 @@ class QuotationRepositoryImpl @Inject constructor(
     private fun validate(d:QuotationDraft){require(d.contactId.isNotBlank()&&d.lines.isNotEmpty());d.lines.forEach{require(it.materialId.isNotBlank());calculator.line(QuotationCalculationLine(it.quantity,it.unitPrice,it.discountPercent,it.taxPercent))}}
     private fun BigDecimal.plain()=setScale(2,RoundingMode.HALF_UP).toPlainString()
     private fun decimal(document:com.google.firebase.firestore.DocumentSnapshot,field:String)=BigDecimal(document.getString(field)?:throw IllegalArgumentException())
+    private fun businessDate(document: com.google.firebase.firestore.DocumentSnapshot, field: String, required: Boolean): Long? = when (val value = document.get(field)) {
+        null -> if (required) throw IllegalArgumentException("Missing quotation $field") else null
+        is com.google.firebase.Timestamp -> value.toDate().time
+        is Number -> value.toLong().takeIf { it > 0 }
+        is String -> value.toLongOrNull()?.takeIf { it > 0 }
+        else -> null
+    } ?: if (required) throw IllegalArgumentException("Invalid quotation $field") else null
 }
 private suspend fun <T> Task<T>.await():T=suspendCancellableCoroutine{c->addOnSuccessListener{c.resume(it)}.addOnFailureListener{c.resumeWithException(it)}}

@@ -1,6 +1,7 @@
 package com.brandcrafts.erp.data.datasource.stock
 
 import com.brandcrafts.erp.data.model.FirestoreStockIn
+import com.brandcrafts.erp.data.mapper.inventoryNumberOrZero
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,7 +21,7 @@ class FirestoreStockRemoteDataSource @Inject constructor(
             val materialSnapshot = transaction.get(material)
             if (!materialSnapshot.exists()) throw MaterialNotFoundException
             if (materialSnapshot.getBoolean("active") != true) throw MaterialInactiveException
-            val currentQuantity = materialSnapshot.getDouble("availableQuantity") ?: 0.0
+            val currentQuantity = materialSnapshot.inventoryNumberOrZero("availableQuantity")
             transaction.update(material, mapOf(
                 "availableQuantity" to currentQuantity + input.quantity,
                 "updatedAt" to FieldValue.serverTimestamp(),

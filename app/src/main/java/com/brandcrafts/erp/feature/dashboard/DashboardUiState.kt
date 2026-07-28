@@ -9,6 +9,7 @@ sealed interface DashboardUiState {
         val recentActivities: List<DashboardActivity> = emptyList(),
         val assignedTasks: List<DashboardTask> = emptyList(),
         val lowStockAlerts: List<LowStockAlert> = emptyList(),
+        val hasPartialDataFailure: Boolean = false,
     ) : DashboardUiState
 
     data class Error(val type: DashboardErrorType) : DashboardUiState

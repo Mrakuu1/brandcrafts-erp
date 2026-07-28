@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.domain.model.InvoicePaymentStatus
 import com.brandcrafts.erp.domain.model.InvoiceStatus
 import com.brandcrafts.erp.ui.components.AppTextField
@@ -46,7 +47,6 @@ import com.brandcrafts.erp.ui.components.StatusTone
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 import java.math.BigDecimal
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.text.KeyboardOptions
@@ -423,7 +423,7 @@ private fun formatInvoiceDetailsDate(value: Long): String =
     DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.US).format(Date(value))
 
 private fun formatInvoiceDetailsCurrency(value: BigDecimal): String =
-    NumberFormat.getCurrencyInstance(Locale.US).format(value)
+    formatIndianCurrency(value)
 
 @Preview(showBackground = true)
 @Composable

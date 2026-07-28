@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.domain.model.PurchaseOrderStatus
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
@@ -38,7 +39,6 @@ import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
 import java.math.BigDecimal
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 
 @Composable
@@ -264,4 +264,4 @@ private fun formatDate(value: Long): String =
     DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(value))
 
 private fun formatCurrency(value: BigDecimal): String =
-    NumberFormat.getCurrencyInstance().format(value)
+    formatIndianCurrency(value)

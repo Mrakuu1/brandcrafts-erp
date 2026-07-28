@@ -70,7 +70,7 @@ class EmployeeRepositoryImpl @Inject constructor(
         return runCatching { functionsDataSource.createEmployee(command).toDomain() }
             .fold(
                 onSuccess = { EmployeeResult.Success(it) },
-                onFailure = { EmployeeResult.Error(it.toEmployeeError()) },
+                onFailure = { EmployeeResult.Error(it.toEmployeeWriteError()) },
             )
     }
 
@@ -79,9 +79,18 @@ class EmployeeRepositoryImpl @Inject constructor(
         return runCatching { functionsDataSource.updateEmployee(command).toDomain() }
             .fold(
                 onSuccess = { EmployeeResult.Success(it) },
-                onFailure = { EmployeeResult.Error(it.toEmployeeError()) },
+                onFailure = { EmployeeResult.Error(it.toEmployeeWriteError()) },
             )
     }
+
+    // A callable NOT_FOUND means that the endpoint may be unavailable.  It is
+    // not safe to present it as a missing employee, especially for Create.
+    private fun Throwable.toEmployeeWriteError(): EmployeeError =
+        if (this is FirebaseFunctionsException && code == FirebaseFunctionsException.Code.NOT_FOUND) {
+            EmployeeError.UNKNOWN
+        } else {
+            toEmployeeError()
+        }
 
     private fun adminUser(): AuthenticatedUser? =
         (sessionManager.currentUser.value as? CurrentUserState.Authenticated)

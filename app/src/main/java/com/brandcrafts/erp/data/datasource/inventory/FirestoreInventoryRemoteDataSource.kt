@@ -24,7 +24,11 @@ class FirestoreInventoryRemoteDataSource @Inject constructor(
                 if (exception != null) {
                     close(exception)
                 } else {
-                    trySend(snapshot?.documents.orEmpty().map { it.toFirestoreInventoryItem() })
+                    try {
+                        trySend(snapshot?.documents.orEmpty().map { it.toFirestoreInventoryItem() })
+                    } catch (mappingException: IllegalArgumentException) {
+                        close(mappingException)
+                    }
                 }
             }
 

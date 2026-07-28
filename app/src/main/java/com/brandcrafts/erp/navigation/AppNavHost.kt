@@ -32,6 +32,7 @@ import com.brandcrafts.erp.feature.contacts.ContactFormMode
 import com.brandcrafts.erp.feature.contacts.ContactFormRoute
 import com.brandcrafts.erp.feature.employee.EmployeeManagementRoute
 import com.brandcrafts.erp.feature.quotation.QuotationRoute
+import com.brandcrafts.erp.feature.quotation.QuotationDetailsRoute
 import com.brandcrafts.erp.feature.quotation.QuotationFormRoute
 import com.brandcrafts.erp.feature.purchaseorder.OrdersRoute
 import com.brandcrafts.erp.feature.purchaseorder.PurchaseOrderFormRoute
@@ -67,6 +68,7 @@ private const val EMPLOYEE_CREATE_ROUTE = "employees/form/create/_"
 private const val EMPLOYEE_EDIT_ROUTE = "employees/form/edit/{employeeId}"
 private const val QUOTATION_CREATE_ROUTE = "quotation/create"
 private const val QUOTATION_EDIT_ROUTE = "quotation/edit/{quotationId}"
+private const val QUOTATION_DETAILS_ROUTE = "quotation/details/{quotationId}"
 private const val PURCHASE_ORDER_CREATE_ROUTE = "purchaseorders/create"
 private const val PURCHASE_ORDER_EDIT_ROUTE = "purchaseorders/edit/{purchaseOrderId}"
 private const val PURCHASE_ORDER_DETAILS_ROUTE = "purchaseorders/details/{purchaseOrderId}"
@@ -230,6 +232,7 @@ private fun AppSessionNavHost(
                                     AppDestination.ORDERS -> OrdersRoute(
                                         onCreateQuotation = { navController.navigate(QUOTATION_CREATE_ROUTE) },
                                         onEditQuotation = { quotationId -> navController.navigate(quotationEditRoute(quotationId)) },
+                                        onOpenQuotation = { quotationId -> navController.navigate(quotationDetailsRoute(quotationId)) },
                                         onCreatePurchaseOrder = { navController.navigate(PURCHASE_ORDER_CREATE_ROUTE) },
                                         onOpenPurchaseOrder = { id -> navController.navigate(purchaseOrderDetailsRoute(id)) },
                                         onEditPurchaseOrder = { id -> navController.navigate(purchaseOrderEditRoute(id)) },
@@ -403,6 +406,9 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
+                composable(QUOTATION_DETAILS_ROUTE) {
+                    QuotationDetailsRoute(onBack = { navController.popBackStack() })
+                }
                 composable(PURCHASE_ORDER_CREATE_ROUTE) {
                     PurchaseOrderFormRoute(
                         onBack = { navController.popBackStack() },
@@ -519,6 +525,8 @@ private fun employeeEditRoute(employeeId: String): String =
 
 private fun quotationEditRoute(quotationId: String): String =
     QUOTATION_EDIT_ROUTE.replace("{quotationId}", quotationId)
+private fun quotationDetailsRoute(quotationId: String): String =
+    QUOTATION_DETAILS_ROUTE.replace("{quotationId}", quotationId)
 
 private fun purchaseOrderEditRoute(purchaseOrderId: String): String = PURCHASE_ORDER_EDIT_ROUTE.replace("{purchaseOrderId}", purchaseOrderId)
 private fun purchaseOrderDetailsRoute(purchaseOrderId: String): String = PURCHASE_ORDER_DETAILS_ROUTE.replace("{purchaseOrderId}", purchaseOrderId)

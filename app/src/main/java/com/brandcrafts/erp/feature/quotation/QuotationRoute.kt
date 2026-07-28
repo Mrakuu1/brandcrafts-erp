@@ -12,6 +12,7 @@ import com.brandcrafts.erp.ui.LocalCurrentUser
 fun QuotationRoute(
     onCreateQuotation: () -> Unit,
     onEditQuotation: (String) -> Unit,
+    onOpenQuotation: (String) -> Unit,
     viewModel: QuotationViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -22,6 +23,9 @@ fun QuotationRoute(
         canManageQuotations = canManageQuotations,
         onCreateQuotation = onCreateQuotation,
         onEditQuotation = onEditQuotation,
+        onOpenQuotation = onOpenQuotation,
+        onApproveQuotation = viewModel::approve,
+        onRejectQuotation = viewModel::reject,
         onSearch = viewModel::search,
         onStatus = viewModel::status,
         onRetry = viewModel::retry,

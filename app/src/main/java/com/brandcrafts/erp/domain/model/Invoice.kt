@@ -89,8 +89,8 @@ enum class InvoicePaymentStatus {
 
     companion object {
         fun from(paidAmount: BigDecimal, grandTotal: BigDecimal): InvoicePaymentStatus = when {
-            paidAmount == BigDecimal.ZERO -> UNPAID
-            paidAmount == grandTotal -> PAID
+            paidAmount.compareTo(BigDecimal.ZERO) == 0 -> UNPAID
+            paidAmount.compareTo(grandTotal) == 0 -> PAID
             else -> PARTIALLY_PAID
         }
     }

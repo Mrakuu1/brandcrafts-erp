@@ -7,20 +7,46 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 
 fun DocumentSnapshot.toEmployeeDto(): EmployeeDto = EmployeeDto(
-    uid = getString("uid") ?: id,
-    name = requireNotNull(getString("name")) { "User $id is missing name" },
-    email = requireNotNull(getString("email")) { "User $id is missing email" },
-    phone = getString("phone") ?: "",
-    role = requireNotNull(getString("role")) { "User $id is missing role" },
-    active = getBoolean("active") ?: false,
-    firstLogin = getBoolean("firstLogin") ?: false,
-    designation = getString("designation") ?: "",
-    profileImage = getString("profileImage") ?: "",
-    createdAt = getTimestamp("createdAt"),
-    updatedAt = getTimestamp("updatedAt"),
-    createdBy = getString("createdBy") ?: "",
-    updatedBy = getString("updatedBy") ?: "",
+    // Existing login profiles use this same users/{uid} schema.  Older
+    // profiles can omit display-only values, so optional mapping must not
+    // fail the complete employee-list listener.
+    // users/{uid} is the profile identity used by login and direct profile
+    // reads.  Always preserve the document ID for list actions and edits.
+    uid = id,
+    name = optionalText("name"),
+    email = optionalText("email"),
+    phone = optionalText("phone"),
+    role = optionalText("role").ifBlank { UserRole.EMPLOYEE.name }.uppercase(),
+    active = booleanOrDefault("active", default = false),
+    firstLogin = booleanOrDefault("firstLogin", default = false),
+    designation = optionalText("designation"),
+    profileImage = optionalText("profileImage"),
+    createdAt = optionalTimestamp("createdAt"),
+    updatedAt = optionalTimestamp("updatedAt"),
+    createdBy = optionalText("createdBy"),
+    updatedBy = optionalText("updatedBy"),
 )
+
+private fun DocumentSnapshot.optionalText(field: String): String =
+    (get(field) as? String)?.trim().orEmpty()
+
+private fun DocumentSnapshot.optionalTimestamp(field: String): com.google.firebase.Timestamp? = when (val value = get(field)) {
+    is com.google.firebase.Timestamp -> value
+    is Number -> value.toLong().takeIf { it > 0 }?.let { com.google.firebase.Timestamp(java.util.Date(it)) }
+    is String -> value.toLongOrNull()?.takeIf { it > 0 }?.let { com.google.firebase.Timestamp(java.util.Date(it)) }
+    else -> null
+}
+
+private fun DocumentSnapshot.booleanOrDefault(field: String, default: Boolean): Boolean = when (val value = get(field)) {
+    null -> default
+    is Boolean -> value
+    is String -> when {
+        value.equals("true", ignoreCase = true) -> true
+        value.equals("false", ignoreCase = true) -> false
+        else -> throw IllegalArgumentException("User $id has invalid $field")
+    }
+    else -> throw IllegalArgumentException("User $id has invalid $field")
+}
 
 fun EmployeeDto.toDomain(): Employee = Employee(
     uid = uid,

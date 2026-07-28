@@ -2,6 +2,7 @@ package com.brandcrafts.erp.data.datasource.stock
 
 import com.brandcrafts.erp.domain.model.AuthenticatedUser
 import com.brandcrafts.erp.domain.model.StockOutInput
+import com.brandcrafts.erp.data.mapper.inventoryNumberOrZero
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,7 +22,7 @@ class FirestoreStockOutRemoteDataSource @Inject constructor(private val firestor
             val snapshot = transaction.get(material)
             if (!snapshot.exists()) throw StockOutMaterialNotFoundException
             if (snapshot.getBoolean("active") != true) throw StockOutMaterialInactiveException
-            val available = snapshot.getDouble("availableQuantity") ?: 0.0
+            val available = snapshot.inventoryNumberOrZero("availableQuantity")
             if (available < input.quantity) throw InsufficientStockException
             transaction.update(material, mapOf("availableQuantity" to available - input.quantity, "updatedAt" to FieldValue.serverTimestamp(), "updatedBy" to user.uid))
             transaction.set(transactionRecord, mapOf("id" to transactionRecord.id, "materialId" to input.materialId, "transactionType" to "STOCK_OUT", "quantity" to input.quantity, "unit" to (snapshot.getString("unit") ?: ""), "referenceId" to input.referenceId.trim(), "referenceType" to "MANUAL", "supplierId" to "", "remarks" to input.remarks.trim(), "performedBy" to user.uid, "createdAt" to FieldValue.serverTimestamp()))

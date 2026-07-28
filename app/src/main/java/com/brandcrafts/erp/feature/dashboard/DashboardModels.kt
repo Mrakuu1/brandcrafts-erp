@@ -8,9 +8,19 @@ data class DashboardCurrencyAmount(
 )
 
 data class AdminDashboardMetrics(
-    val totalSales: DashboardCurrencyAmount,
-    val outstandingPayments: DashboardCurrencyAmount,
-    val lowStockCount: Int,
+    val totalSales: DashboardCurrencyAmount?,
+    val outstandingPayments: DashboardCurrencyAmount?,
+    val lowStockCount: Int?,
+    val employeeCount: Int?,
+    val customerCount: Int?,
+    val quotationCount: Int?,
+    val invoiceCount: Int?,
+    val purchaseOrderCount: Int?,
+    val deliveryChallanCount: Int?,
+    val draftQuotationCount: Int?,
+    val issuedInvoiceCount: Int?,
+    val approvedPurchaseOrderCount: Int?,
+    val dispatchedDeliveryChallanCount: Int?,
 )
 
 data class EmployeeDashboardMetrics(
@@ -20,7 +30,7 @@ data class EmployeeDashboardMetrics(
 
 data class DashboardActivity(
     val id: String,
-    val title: String,
+    @androidx.annotation.StringRes val titleRes: Int,
     val description: String,
     val timestamp: String,
     val status: DashboardActivityStatus,

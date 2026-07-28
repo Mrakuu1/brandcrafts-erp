@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
+import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
 import com.brandcrafts.erp.ui.components.AppTextField
 import com.brandcrafts.erp.ui.components.EmptyState
@@ -47,7 +48,6 @@ import com.brandcrafts.erp.ui.components.SectionHeader
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 import java.math.BigDecimal
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 
@@ -505,7 +505,7 @@ private fun formatInvoiceDate(value: Long): String =
     DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.US).format(Date(value))
 
 private fun formatInvoiceCurrency(value: BigDecimal): String =
-    NumberFormat.getCurrencyInstance(Locale.US).format(value)
+    formatIndianCurrency(value)
 
 @Preview(showBackground = true)
 @Composable

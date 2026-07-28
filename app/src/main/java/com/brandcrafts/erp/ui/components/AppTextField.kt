@@ -1,6 +1,7 @@
 package com.brandcrafts.erp.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 
 @Composable
@@ -36,6 +38,7 @@ fun AppTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
         enabled = enabled,
         readOnly = readOnly,
         singleLine = singleLine,
