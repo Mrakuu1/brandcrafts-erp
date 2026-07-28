@@ -37,6 +37,8 @@ class PurchaseOrderPdfRenderer @Inject constructor(
                 fun line(value: String, bold: Boolean = false) { paint.isFakeBoldText = bold; canvas.drawText(value, 40f, y, paint); y += 18f }
                 fun date(value: Long) = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.US).format(Date(value))
                 fun header() {
+                    val bannerHeight = BusinessPdfLayout.drawBanner(context, canvas, y)
+                    if (bannerHeight > 0f) y += bannerHeight + 8f
                     line(company.companyName, true)
                     line(listOf(company.addressLine1, company.addressLine2, "${company.city}, ${company.state} ${company.pincode}", company.country).filter(String::isNotBlank).joinToString(" | "))
                     line("${company.phone}  ${company.email}")

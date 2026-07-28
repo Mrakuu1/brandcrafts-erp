@@ -85,6 +85,8 @@ class InvoicePdfRenderer @Inject constructor(
         }
 
         fun drawHeader() {
+            val bannerHeight = BusinessPdfLayout.drawBanner(context, canvas, y)
+            if (bannerHeight > 0f) y += bannerHeight + 8f
             drawWrapped(company.companyName, bold = true)
             company.legalName.takeIf(String::isNotBlank)?.let { drawWrapped(it) }
             drawWrapped(
