@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
+import com.brandcrafts.erp.ui.theme.BrandSpacing
 
 @Composable
 fun EmptyState(
@@ -26,7 +27,7 @@ fun EmptyState(
     onActionClick: (() -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(24.dp),
+        modifier = modifier.fillMaxWidth().padding(BrandSpacing.Xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -34,7 +35,7 @@ fun EmptyState(
             Icon(
                 imageVector = it,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(36.dp),
                 tint = MaterialTheme.colorScheme.primary,
             )
         }

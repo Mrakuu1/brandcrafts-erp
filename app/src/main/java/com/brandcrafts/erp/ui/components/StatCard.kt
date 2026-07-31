@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
+import com.brandcrafts.erp.ui.theme.BrandSpacing
+import com.brandcrafts.erp.ui.theme.BrandVisualTokens
 
 @Composable
 fun StatCard(
@@ -31,12 +33,14 @@ fun StatCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = BrandVisualTokens.CardSurfaceAlpha),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(BrandSpacing.Lg),
+            horizontalArrangement = Arrangement.spacedBy(BrandSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -44,7 +48,7 @@ fun StatCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(text = title, style = MaterialTheme.typography.bodyMedium)
-                Text(text = value, style = MaterialTheme.typography.headlineSmall)
+                Text(text = value, style = MaterialTheme.typography.titleLarge)
                 trend?.let {
                     Text(
                         text = it,

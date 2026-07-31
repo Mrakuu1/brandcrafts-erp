@@ -1,8 +1,7 @@
 package com.brandcrafts.erp.ui.dialogs
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.brandcrafts.erp.ui.components.PrimaryButton
@@ -18,10 +17,10 @@ fun ConfirmationDialog(
     onDismiss: () -> Unit,
     confirmLoading: Boolean = false,
 ) {
-    AlertDialog(
+    BrandDialog(
         onDismissRequest = { if (!confirmLoading) onDismiss() },
-        title = { Text(text = title) },
-        text = { Text(text = description) },
+        title = title,
+        description = description,
         confirmButton = {
             PrimaryButton(
                 text = confirmLabel,

@@ -1,13 +1,17 @@
 package com.brandcrafts.erp.ui.components
 
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import com.brandcrafts.erp.ui.theme.BrandSpacing
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
+import com.brandcrafts.erp.ui.theme.BrandVisualTokens
 
 enum class StatusTone { NEUTRAL, SUCCESS, WARNING, ERROR, INFO }
 
@@ -24,15 +28,18 @@ fun StatusChip(
         StatusTone.ERROR -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
         StatusTone.INFO -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
     }
-    AssistChip(
-        onClick = {},
-        modifier = modifier,
-        label = { Text(text = label) },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = containerColor,
-            labelColor = labelColor,
-        ),
-    )
+    Surface(
+        modifier = modifier.semantics { contentDescription = label },
+        shape = MaterialTheme.shapes.small,
+        color = containerColor.copy(alpha = BrandVisualTokens.FieldSurfaceAlpha),
+        contentColor = labelColor,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = BrandSpacing.Sm, vertical = BrandSpacing.Xs),
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
 }
 
 @Preview(showBackground = true)

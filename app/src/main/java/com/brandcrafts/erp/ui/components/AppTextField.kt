@@ -1,10 +1,11 @@
 package com.brandcrafts.erp.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -13,8 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
+import com.brandcrafts.erp.ui.theme.BrandSpacing
+import com.brandcrafts.erp.ui.theme.BrandVisualTokens
 
 @Composable
 fun AppTextField(
@@ -37,8 +39,8 @@ fun AppTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.fillMaxWidth().defaultMinSize(minHeight = BrandSpacing.MinTouchTarget),
+        shape = MaterialTheme.shapes.medium,
         enabled = enabled,
         readOnly = readOnly,
         singleLine = singleLine,
@@ -55,7 +57,15 @@ fun AppTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
-        colors = OutlinedTextFieldDefaults.colors(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = BrandVisualTokens.FieldSurfaceAlpha),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = BrandVisualTokens.FieldSurfaceAlpha),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .45f),
+            errorContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = .36f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = .78f),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = BrandVisualTokens.LightBorderAlpha),
+            errorBorderColor = MaterialTheme.colorScheme.error,
+        ),
     )
 }
 

@@ -5,6 +5,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -28,9 +30,16 @@ fun AppTopBar(
     onNavigationClick: (() -> Unit)? = null,
     actions: List<TopBarAction> = emptyList(),
     trailingContent: (@Composable RowScope.() -> Unit)? = null,
+    transparent: Boolean = false,
 ) {
     TopAppBar(
         modifier = modifier,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = if (transparent) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .88f),
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
         title = { Text(text = title) },
         navigationIcon = {
             if (navigationIcon != null && onNavigationClick != null) {

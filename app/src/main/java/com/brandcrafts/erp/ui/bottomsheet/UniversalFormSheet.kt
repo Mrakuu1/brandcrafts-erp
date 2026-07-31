@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,8 +17,8 @@ import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.ui.components.PrimaryButton
 import com.brandcrafts.erp.ui.components.SecondaryButton
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
+import com.brandcrafts.erp.ui.theme.BrandSpacing
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UniversalFormSheet(
     title: String,
@@ -34,15 +31,15 @@ fun UniversalFormSheet(
     cancelActionLabel: String? = null,
     content: @Composable () -> Unit,
 ) {
-    ModalBottomSheet(
+    BrandBottomSheet(
+        title = title,
         onDismissRequest = onDismissRequest,
         modifier = modifier,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = BrandSpacing.Lg),
+            verticalArrangement = Arrangement.spacedBy(BrandSpacing.Xl),
         ) {
-            Text(text = title, style = MaterialTheme.typography.headlineSmall)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -53,7 +50,7 @@ fun UniversalFormSheet(
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(BrandSpacing.Md),
             ) {
                 cancelActionLabel?.let { label ->
                     SecondaryButton(
