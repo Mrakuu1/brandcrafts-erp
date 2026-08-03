@@ -30,6 +30,7 @@ import com.brandcrafts.erp.domain.usecase.quotation.ObserveQuotationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.text.DateFormat
+import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -130,12 +131,16 @@ class DashboardViewModel @Inject constructor(
     private fun publish() {
         val user = (sessionManager.currentUser.value as? CurrentUserState.Authenticated)?.user ?: return
         val lowStock = inventory.filter { it.active && it.availableQuantity <= it.minimumQuantity }
-        val issued = invoices.filter { it.status == InvoiceStatus.ISSUED }
+        val currentDateMillis = System.currentTimeMillis()
+        val currentMonthInvoices = invoices.filter { it.invoiceDateMillis.isInCurrentCalendarMonth(currentDateMillis) }
+        val issued = currentMonthInvoices.filter { it.status == InvoiceStatus.ISSUED }
+        val overdue = issued.filter { it.isOverdue(currentDateMillis) }
         _state.value = DashboardUiState.Loaded(
             adminMetrics = if (user.role == UserRole.ADMIN && anySnapshotLoaded) {
                 AdminDashboardMetrics(
                     totalSales = if (invoicesLoaded) DashboardCurrencyAmount(issued.fold(BigDecimal.ZERO) { total, item -> total + item.grandTotal }, "INR") else null,
                     outstandingPayments = if (invoicesLoaded) DashboardCurrencyAmount(issued.fold(BigDecimal.ZERO) { total, item -> total + item.outstandingAmount }, "INR") else null,
+                    overduePayments = if (invoicesLoaded) DashboardCurrencyAmount(overdue.fold(BigDecimal.ZERO) { total, item -> total + item.outstandingAmount }, "INR") else null,
                     lowStockCount = lowStock.size.takeIf { inventoryLoaded },
                     employeeCount = employeeCount,
                     customerCount = customerCount,
@@ -174,4 +179,13 @@ class DashboardViewModel @Inject constructor(
             else -> DashboardActivityStatus.INFO
         },
     )
+
+    private fun Long.isInCurrentCalendarMonth(currentDateMillis: Long): Boolean {
+        val now = Calendar.getInstance()
+        now.timeInMillis = currentDateMillis
+        val invoiceDate = Calendar.getInstance()
+        invoiceDate.timeInMillis = this
+        return now.get(Calendar.YEAR) == invoiceDate.get(Calendar.YEAR) &&
+            now.get(Calendar.MONTH) == invoiceDate.get(Calendar.MONTH)
+    }
 }

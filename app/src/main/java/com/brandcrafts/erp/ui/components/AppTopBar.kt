@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 
@@ -35,7 +36,15 @@ fun AppTopBar(
     TopAppBar(
         modifier = modifier,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = if (transparent) Color.Transparent else MaterialTheme.colorScheme.surface.copy(alpha = .88f),
+            // The app bar intentionally continues the screen canvas.  A separate warm
+            // surface made the Orders header read brown in dark mode.
+            containerColor = if (transparent) {
+                Color.Transparent
+            } else if (MaterialTheme.colorScheme.background.red < .2f) {
+                Color(0xFF070D14)
+            } else {
+                Color(0xFFFFFCFA)
+            },
             titleContentColor = MaterialTheme.colorScheme.onSurface,
             actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -8,6 +8,7 @@ sealed interface EmployeeManagementUiEvent {
     data object StatusChangeConfirmed : EmployeeManagementUiEvent
     data object StatusChangeDismissed : EmployeeManagementUiEvent
     data object AddEmployeeClicked : EmployeeManagementUiEvent
+    data class EditEmployeeRequested(val employee: EmployeeListItemUi) : EmployeeManagementUiEvent
     data class EmployeeClicked(val employee: EmployeeListItemUi) : EmployeeManagementUiEvent
     data class RoleSelected(val role: UserRole) : EmployeeManagementUiEvent
     data object RoleChangeConfirmed : EmployeeManagementUiEvent

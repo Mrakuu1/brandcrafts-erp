@@ -1,5 +1,6 @@
 package com.brandcrafts.erp.feature.quotation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,21 +9,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,9 +40,17 @@ import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
 import com.brandcrafts.erp.ui.components.SearchBar
-import com.brandcrafts.erp.ui.components.SectionHeader
 import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFabAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterBottomSheet
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterChoice
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterChoiceList
+import com.brandcrafts.erp.feature.purchaseorder.OrdersListScaffold
+import com.brandcrafts.erp.feature.purchaseorder.OrdersDocumentCard
+import com.brandcrafts.erp.feature.purchaseorder.OrdersCardAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersCardActions
+import com.brandcrafts.erp.feature.purchaseorder.OrdersDocumentLeadingIcon
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 import java.math.BigDecimal
 import java.text.DateFormat
@@ -57,37 +70,44 @@ fun QuotationScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SectionHeader(
-            title = stringResource(R.string.quotation_title),
-            modifier = Modifier.padding(horizontal = 16.dp),
-            actionLabel = if (canManageQuotations) stringResource(R.string.quotation_create) else null,
-            onActionClick = if (canManageQuotations) onCreateQuotation else null,
-        )
-        SearchBar(state.query, onSearch, stringResource(R.string.quotation_search), modifier = Modifier.padding(horizontal = 16.dp))
-        LazyRow(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item {
-                FilterChip(selected = state.status == null, onClick = { onStatus(null) }, label = { Text(stringResource(R.string.quotation_all)) })
+    var filtersOpen by remember { mutableStateOf(false) }
+    var pendingStatus by remember(state.status) { mutableStateOf(state.status) }
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+
+    OrdersListScaffold(
+        query = state.query,
+        onQueryChange = onSearch,
+        searchPlaceholder = stringResource(R.string.quotation_search),
+        refreshing = state.content == QuotationUiState.Content.Loading && state.all.isNotEmpty(),
+        onRefresh = onRetry,
+        isFilterActive = state.status != null,
+        onOpenFilters = {
+            pendingStatus = state.status
+            filtersOpen = true
+        },
+        snackbarHostState = snackbarHostState,
+        createAction = if (canManageQuotations) {
+            OrdersFabAction(stringResource(R.string.quotation_create), onCreateQuotation)
+        } else {
+            null
+        },
+        modifier = modifier,
+    ) {
+        when {
+            state.content == QuotationUiState.Content.Loading && state.visible.isEmpty() -> {
+                LoadingView(message = stringResource(R.string.quotation_loading))
             }
-            items(QuotationStatus.entries) { status ->
-                FilterChip(selected = state.status == status, onClick = { onStatus(status) }, label = { Text(stringResource(status.res())) })
-            }
-        }
-        when (state.content) {
-            QuotationUiState.Content.Loading -> LoadingView(message = stringResource(R.string.quotation_loading))
-            QuotationUiState.Content.Error -> ErrorState(
+            state.content == QuotationUiState.Content.Error && state.visible.isEmpty() -> ErrorState(
                 stringResource(R.string.quotation_error), stringResource(R.string.quotation_error_description),
                 stringResource(R.string.retry), onRetry,
             )
-            QuotationUiState.Content.Empty -> EmptyState(
+            state.content == QuotationUiState.Content.Empty -> EmptyState(
                 stringResource(if (state.query.isBlank()) R.string.quotation_empty else R.string.quotation_no_results),
                 stringResource(R.string.quotation_empty_description),
             )
-            QuotationUiState.Content.Loaded -> LazyColumn(
-                contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp),
+            else -> LazyColumn(
+                contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 96.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(state.visible, key = { it.quotation.id }) { item ->
                     QuotationListItem(
@@ -103,6 +123,38 @@ fun QuotationScreen(
             }
         }
     }
+    if (filtersOpen) {
+        OrdersFilterBottomSheet(
+            onDismissRequest = { filtersOpen = false },
+            onApply = {
+                onStatus(pendingStatus)
+                filtersOpen = false
+            },
+        ) {
+            OrdersFilterChoiceList(
+                choices = buildList {
+                    add(
+                        OrdersFilterChoice(
+                            id = "all",
+                            label = stringResource(R.string.quotation_all),
+                            selected = pendingStatus == null,
+                            onSelected = { pendingStatus = null },
+                        ),
+                    )
+                    QuotationStatus.entries.forEach { status ->
+                        add(
+                            OrdersFilterChoice(
+                                id = status.name,
+                                label = stringResource(status.res()),
+                                selected = pendingStatus == status,
+                                onSelected = { pendingStatus = status },
+                            ),
+                        )
+                    }
+                },
+            )
+        }
+    }
 }
 
 @Composable
@@ -116,12 +168,10 @@ private fun QuotationListItem(
     onReject: () -> Unit,
 ) {
     val quotation = item.quotation
-    Card(
-        onClick = onOpen,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
+    OrdersDocumentCard(onClick = onOpen) {
         ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = { OrdersDocumentLeadingIcon() },
             headlineContent = { Text(quotation.number) },
             supportingContent = {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -132,23 +182,17 @@ private fun QuotationListItem(
                 }
             },
             trailingContent = {
-                Column(horizontalAlignment = androidx.compose.ui.Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                     StatusChip(stringResource(quotation.status.res()), tone = tone(quotation.status))
-                    if (canEdit) {
-                        IconButton(onClick = onEdit) {
-                            Icon(Icons.Outlined.Edit, stringResource(R.string.quotation_edit))
-                        }
-                    }
-                    if (canChangeStatus) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            TextButton(onClick = onApprove) {
-                                Text(stringResource(R.string.quotation_approve))
-                            }
-                            TextButton(onClick = onReject) {
-                                Text(stringResource(R.string.quotation_reject))
-                            }
-                        }
-                    }
+                }
+            },
+        )
+        OrdersCardActions(
+            buildList {
+                if (canEdit) add(OrdersCardAction(stringResource(R.string.quotation_edit), Icons.Outlined.Edit, onEdit))
+                if (canChangeStatus) {
+                    add(OrdersCardAction(stringResource(R.string.quotation_approve), Icons.Outlined.Edit, onApprove))
+                    add(OrdersCardAction(stringResource(R.string.quotation_reject), Icons.Outlined.Edit, onReject))
                 }
             },
         )
@@ -225,3 +269,9 @@ private fun previewQuotationList(vararg statuses: QuotationStatus, customerName:
     }
     return QuotationUiState(content = QuotationUiState.Content.Loaded, visible = items)
 }
+
+@Composable
+private fun quotationsDark(): Boolean = MaterialTheme.colorScheme.background.red < .2f
+
+@Composable
+private fun quotationCardColor(): Color = if (quotationsDark()) Color(0xFF111A25) else Color.White

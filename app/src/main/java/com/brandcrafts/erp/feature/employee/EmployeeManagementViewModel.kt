@@ -54,6 +54,9 @@ class EmployeeManagementViewModel @Inject constructor(
             EmployeeManagementUiEvent.AddEmployeeClicked -> if (isActiveAdmin()) {
                 sendEffect(EmployeeManagementUiEffect.OpenEmployeeCreate)
             } else unauthorized()
+            is EmployeeManagementUiEvent.EditEmployeeRequested -> if (isActiveAdmin()) {
+                sendEffect(EmployeeManagementUiEffect.OpenEmployeeEdit(event.employee.uid))
+            } else unauthorized()
             is EmployeeManagementUiEvent.EmployeeClicked -> _uiState.value = _uiState.value.copy(
                 selectedEmployee = event.employee,
                 selectedRole = event.employee.role,

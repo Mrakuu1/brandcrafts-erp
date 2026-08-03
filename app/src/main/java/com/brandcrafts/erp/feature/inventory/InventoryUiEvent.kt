@@ -7,6 +7,6 @@ sealed interface InventoryUiEvent {
     data class StockInClicked(val itemId: String) : InventoryUiEvent
     data class StockOutClicked(val itemId: String) : InventoryUiEvent
     data object AddItemClicked : InventoryUiEvent
-    data object FilterClicked : InventoryUiEvent
+    data class FilterChanged(val filter: InventoryFilter) : InventoryUiEvent
     data object RetryClicked : InventoryUiEvent
 }

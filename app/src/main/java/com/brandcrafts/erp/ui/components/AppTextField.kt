@@ -8,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,8 +16,34 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
-import com.brandcrafts.erp.ui.theme.BrandSpacing
-import com.brandcrafts.erp.ui.theme.BrandVisualTokens
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
+/**
+ * The outlined-field treatment shared by the Inventory and document form sheets.
+ * A persistent label means an existing value never loses its field context.
+ */
+@Composable
+fun formOutlinedTextFieldColors(): TextFieldColors {
+    val dark = MaterialTheme.colorScheme.background.red < .2f
+    val surface = if (dark) Color(0xFF16212E) else Color(0xFFFFFCFA)
+    val outline = if (dark) Color(0xFF283646) else Color(0xFFEEE8E3)
+    return OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = surface,
+        unfocusedContainerColor = surface,
+        disabledContainerColor = surface.copy(alpha = .6f),
+        errorContainerColor = surface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = outline,
+        disabledBorderColor = outline.copy(alpha = .6f),
+        errorBorderColor = MaterialTheme.colorScheme.error,
+    )
+}
+
+/** Keeps document-form menus on the same opaque surface as their outlined fields. */
+@Composable
+fun formDropdownMenuContainerColor(): Color =
+    if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFF16212E) else Color.White
 
 @Composable
 fun AppTextField(
@@ -39,8 +66,8 @@ fun AppTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth().defaultMinSize(minHeight = BrandSpacing.MinTouchTarget),
-        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.fillMaxWidth().defaultMinSize(minHeight = 60.dp),
+        shape = MaterialTheme.shapes.small,
         enabled = enabled,
         readOnly = readOnly,
         singleLine = singleLine,
@@ -57,15 +84,7 @@ fun AppTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = BrandVisualTokens.FieldSurfaceAlpha),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = BrandVisualTokens.FieldSurfaceAlpha),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .45f),
-            errorContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = .36f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = .78f),
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = BrandVisualTokens.LightBorderAlpha),
-            errorBorderColor = MaterialTheme.colorScheme.error,
-        ),
+        colors = formOutlinedTextFieldColors(),
     )
 }
 

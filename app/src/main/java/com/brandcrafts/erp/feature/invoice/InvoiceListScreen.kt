@@ -9,27 +9,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,14 +36,20 @@ import com.brandcrafts.erp.R
 import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.domain.model.InvoicePaymentStatus
 import com.brandcrafts.erp.domain.model.InvoiceStatus
-import com.brandcrafts.erp.ui.components.AppTopBar
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
-import com.brandcrafts.erp.ui.components.SearchBar
 import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
-import com.brandcrafts.erp.ui.components.TopBarAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFabAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterBottomSheet
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterChoice
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterChoiceList
+import com.brandcrafts.erp.feature.purchaseorder.OrdersListScaffold
+import com.brandcrafts.erp.feature.purchaseorder.OrdersDocumentCard
+import com.brandcrafts.erp.feature.purchaseorder.OrdersDocumentLeadingIcon
+import com.brandcrafts.erp.feature.purchaseorder.OrdersCardAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersCardActions
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
 import java.math.BigDecimal
 import java.text.DateFormat
@@ -58,56 +63,36 @@ fun InvoiceListScreen(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            AppTopBar(
-                title = stringResource(R.string.invoice_title),
-                actions = buildList {
-                    add(
-                        TopBarAction(
-                            icon = Icons.Outlined.Refresh,
-                            contentDescription = stringResource(R.string.retry),
-                            onClick = { onEvent(InvoiceListUiEvent.Refresh) },
-                        ),
-                    )
-                    if (state.canCreate) {
-                        add(
-                            TopBarAction(
-                                icon = Icons.Outlined.Add,
-                                contentDescription = stringResource(R.string.invoice_create),
-                                onClick = { onEvent(InvoiceListUiEvent.CreateClicked) },
-                            ),
-                        )
-                    }
-                },
-            )
+    var filtersOpen by remember { mutableStateOf(false) }
+    var pendingDocumentStatus by remember(state.documentStatusFilter) {
+        mutableStateOf(state.documentStatusFilter)
+    }
+    var pendingPaymentStatus by remember(state.paymentStatusFilter) {
+        mutableStateOf(state.paymentStatusFilter)
+    }
+    OrdersListScaffold(
+        query = state.searchQuery,
+        onQueryChange = { onEvent(InvoiceListUiEvent.SearchChanged(it)) },
+        searchPlaceholder = stringResource(R.string.invoice_search),
+        refreshing = state.isRefreshing,
+        onRefresh = { onEvent(InvoiceListUiEvent.Refresh) },
+        isFilterActive = state.documentStatusFilter !is InvoiceDocumentStatusFilter.All ||
+            state.paymentStatusFilter !is InvoicePaymentStatusFilter.All,
+        onOpenFilters = {
+            pendingDocumentStatus = state.documentStatusFilter
+            pendingPaymentStatus = state.paymentStatusFilter
+            filtersOpen = true
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SearchBar(
-                query = state.searchQuery,
-                onQueryChange = { onEvent(InvoiceListUiEvent.SearchChanged(it)) },
-                placeholder = stringResource(R.string.invoice_search),
-                searchIcon = Icons.Outlined.Search,
-                searchIconContentDescription = stringResource(R.string.invoice_search),
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            InvoiceDocumentStatusFilters(
-                selected = state.documentStatusFilter,
-                onSelected = { onEvent(InvoiceListUiEvent.DocumentStatusFilterChanged(it)) },
-            )
-            InvoicePaymentStatusFilters(
-                selected = state.paymentStatusFilter,
-                onSelected = { onEvent(InvoiceListUiEvent.PaymentStatusFilterChanged(it)) },
-            )
-            if (state.isRefreshing) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        snackbarHostState = snackbarHostState,
+        createAction = if (state.canCreate) {
+            OrdersFabAction(stringResource(R.string.invoice_create)) {
+                onEvent(InvoiceListUiEvent.CreateClicked)
             }
+        } else {
+            null
+        },
+        modifier = modifier,
+    ) {
             when {
                 state.content is InvoiceListContent.Loading && state.rows.isEmpty() -> LoadingView(
                     message = stringResource(R.string.invoice_loading),
@@ -148,6 +133,24 @@ fun InvoiceListScreen(
                     )
                 }
             }
+    }
+    if (filtersOpen) {
+        OrdersFilterBottomSheet(
+            onDismissRequest = { filtersOpen = false },
+            onApply = {
+                onEvent(InvoiceListUiEvent.DocumentStatusFilterChanged(pendingDocumentStatus))
+                onEvent(InvoiceListUiEvent.PaymentStatusFilterChanged(pendingPaymentStatus))
+                filtersOpen = false
+            },
+        ) {
+            InvoiceDocumentStatusFilters(
+                selected = pendingDocumentStatus,
+                onSelected = { pendingDocumentStatus = it },
+            )
+            InvoicePaymentStatusFilters(
+                selected = pendingPaymentStatus,
+                onSelected = { pendingPaymentStatus = it },
+            )
         }
     }
 }
@@ -157,25 +160,28 @@ private fun InvoiceDocumentStatusFilters(
     selected: InvoiceDocumentStatusFilter,
     onSelected: (InvoiceDocumentStatusFilter) -> Unit,
 ) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        item {
-            FilterChip(
-                selected = selected is InvoiceDocumentStatusFilter.All,
-                onClick = { onSelected(InvoiceDocumentStatusFilter.All) },
-                label = { Text(stringResource(R.string.invoice_all_document_statuses)) },
+    OrdersFilterChoiceList(
+        choices = buildList {
+            add(
+                OrdersFilterChoice(
+                    id = "document-all",
+                    label = stringResource(R.string.invoice_all_document_statuses),
+                    selected = selected is InvoiceDocumentStatusFilter.All,
+                    onSelected = { onSelected(InvoiceDocumentStatusFilter.All) },
+                ),
             )
-        }
-        items(InvoiceStatus.entries) { status ->
-            FilterChip(
-                selected = (selected as? InvoiceDocumentStatusFilter.Status)?.value == status,
-                onClick = { onSelected(InvoiceDocumentStatusFilter.Status(status)) },
-                label = { Text(stringResource(status.labelRes())) },
-            )
-        }
-    }
+            InvoiceStatus.entries.forEach { status ->
+                add(
+                    OrdersFilterChoice(
+                        id = "document-${status.name}",
+                        label = stringResource(status.labelRes()),
+                        selected = (selected as? InvoiceDocumentStatusFilter.Status)?.value == status,
+                        onSelected = { onSelected(InvoiceDocumentStatusFilter.Status(status)) },
+                    ),
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -183,25 +189,28 @@ private fun InvoicePaymentStatusFilters(
     selected: InvoicePaymentStatusFilter,
     onSelected: (InvoicePaymentStatusFilter) -> Unit,
 ) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        item {
-            FilterChip(
-                selected = selected is InvoicePaymentStatusFilter.All,
-                onClick = { onSelected(InvoicePaymentStatusFilter.All) },
-                label = { Text(stringResource(R.string.invoice_all_payment_statuses)) },
+    OrdersFilterChoiceList(
+        choices = buildList {
+            add(
+                OrdersFilterChoice(
+                    id = "payment-all",
+                    label = stringResource(R.string.invoice_all_payment_statuses),
+                    selected = selected is InvoicePaymentStatusFilter.All,
+                    onSelected = { onSelected(InvoicePaymentStatusFilter.All) },
+                ),
             )
-        }
-        items(InvoicePaymentStatus.entries) { status ->
-            FilterChip(
-                selected = (selected as? InvoicePaymentStatusFilter.Status)?.value == status,
-                onClick = { onSelected(InvoicePaymentStatusFilter.Status(status)) },
-                label = { Text(stringResource(status.labelRes())) },
-            )
-        }
-    }
+            InvoicePaymentStatus.entries.forEach { status ->
+                add(
+                    OrdersFilterChoice(
+                        id = "payment-${status.name}",
+                        label = stringResource(status.labelRes()),
+                        selected = (selected as? InvoicePaymentStatusFilter.Status)?.value == status,
+                        onSelected = { onSelected(InvoicePaymentStatusFilter.Status(status)) },
+                    ),
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -229,7 +238,7 @@ private fun InvoiceRows(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = rows, key = InvoiceListItem::id) { item ->
@@ -257,12 +266,10 @@ private fun InvoiceListCard(
     onRecordPayment: () -> Unit,
 ) {
     val operating = operation != null
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onOpen,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
+    OrdersDocumentCard(onClick = onOpen) {
         ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = { OrdersDocumentLeadingIcon() },
             headlineContent = { Text(item.invoiceNumber, style = MaterialTheme.typography.titleMedium) },
             supportingContent = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -286,23 +293,20 @@ private fun InvoiceListCard(
                     }
                     if (operating) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    } else {
-                        if (item.canEdit) {
-                            TextButton(onClick = onEdit) { Text(stringResource(R.string.invoice_edit)) }
-                        }
-                        if (item.canIssue) {
-                            TextButton(onClick = onIssue) { Text(stringResource(R.string.invoice_issue)) }
-                        }
-                        if (item.canCancel) {
-                            TextButton(onClick = onCancel) { Text(stringResource(R.string.invoice_cancel)) }
-                        }
-                        if (item.canRecordPayment) {
-                            TextButton(onClick = onRecordPayment) { Text(stringResource(R.string.invoice_record_payment)) }
-                        }
                     }
                 }
             },
         )
+        if (!operating) {
+            OrdersCardActions(
+                buildList {
+                    if (item.canEdit) add(OrdersCardAction(stringResource(R.string.invoice_edit), Icons.Outlined.Edit, onEdit))
+                    if (item.canIssue) add(OrdersCardAction(stringResource(R.string.invoice_issue), Icons.Outlined.Edit, onIssue))
+                    if (item.canCancel) add(OrdersCardAction(stringResource(R.string.invoice_cancel), Icons.Outlined.Edit, onCancel))
+                    if (item.canRecordPayment) add(OrdersCardAction(stringResource(R.string.invoice_record_payment), Icons.Outlined.Edit, onRecordPayment))
+                },
+            )
+        }
     }
 }
 

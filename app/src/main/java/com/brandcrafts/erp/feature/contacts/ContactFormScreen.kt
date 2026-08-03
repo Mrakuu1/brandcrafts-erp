@@ -15,8 +15,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
 import com.brandcrafts.erp.domain.model.ContactType
-import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
-import com.brandcrafts.erp.ui.components.AppTextField
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
@@ -44,7 +42,7 @@ fun ContactFormScreen(
             modifier = modifier,
         )
 
-        else -> UniversalFormSheet(
+        else -> PeopleFormSheet(
             title = stringResource(uiState.titleRes()),
             primaryActionLabel = stringResource(uiState.saveLabelRes()),
             onPrimaryAction = { onEvent(ContactFormUiEvent.SaveClicked) },
@@ -75,27 +73,27 @@ private fun ContactFormFields(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
-        AppTextField(
+        PeopleFormTextField(
             value = stringResource(uiState.type.typeRes()),
             onValueChange = {},
             label = stringResource(R.string.contact_form_type_label),
             readOnly = true,
             enabled = false,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.name,
             onValueChange = { onEvent(ContactFormUiEvent.NameChanged(it)) },
             label = stringResource(R.string.contact_form_name_label),
             errorMessage = uiState.errors.name?.let { stringResource(it) },
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.company,
             onValueChange = { onEvent(ContactFormUiEvent.CompanyChanged(it)) },
             label = stringResource(R.string.contact_form_company_label),
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.phone,
             onValueChange = { onEvent(ContactFormUiEvent.PhoneChanged(it)) },
             label = stringResource(R.string.contact_form_phone_label),
@@ -103,7 +101,7 @@ private fun ContactFormFields(
             enabled = !uiState.isSaving,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.email,
             onValueChange = { onEvent(ContactFormUiEvent.EmailChanged(it)) },
             label = stringResource(R.string.contact_form_email_label),
@@ -111,39 +109,39 @@ private fun ContactFormFields(
             enabled = !uiState.isSaving,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.address,
             onValueChange = { onEvent(ContactFormUiEvent.AddressChanged(it)) },
             label = stringResource(R.string.contact_form_address_label),
             enabled = !uiState.isSaving,
             singleLine = false,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.gstNumber,
             onValueChange = { onEvent(ContactFormUiEvent.GstNumberChanged(it)) },
             label = stringResource(R.string.contact_form_gst_label),
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.city,
             onValueChange = { onEvent(ContactFormUiEvent.CityChanged(it)) },
             label = stringResource(R.string.contact_form_city_label),
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.state,
             onValueChange = { onEvent(ContactFormUiEvent.StateChanged(it)) },
             label = stringResource(R.string.contact_form_state_label),
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.pincode,
             onValueChange = { onEvent(ContactFormUiEvent.PincodeChanged(it)) },
             label = stringResource(R.string.contact_form_pincode_label),
             enabled = !uiState.isSaving,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
-        AppTextField(
+        PeopleFormTextField(
             value = uiState.notes,
             onValueChange = { onEvent(ContactFormUiEvent.NotesChanged(it)) },
             label = stringResource(R.string.contact_form_notes_label),
@@ -162,6 +160,7 @@ private fun ContactFormFields(
                 checked = uiState.active,
                 onCheckedChange = { onEvent(ContactFormUiEvent.ActiveChanged(it)) },
                 enabled = !uiState.isSaving,
+                colors = peopleFormSwitchColors(),
             )
         }
     }

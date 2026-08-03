@@ -19,12 +19,13 @@ private val WarmSurface = Color(0xFFFFFCFA)
 private val WarmSurfaceVariant = Color(0xFFFFF3EA)
 private val WarmOutline = Color(0xFFE7D8CC)
 
-private val Night = Color(0xFF070605)
-private val NightSurface = Color(0xFF15110E)
-private val NightSurfaceVariant = Color(0xFF211913)
-private val NightInk = Color(0xFFFFF7F1)
-private val NightMutedInk = Color(0xFFD6C9C0)
-private val NightOutline = Color(0xFF62452F)
+// Shared dark surfaces use the approved blue-navy hierarchy, not warm brown.
+private val Night = Color(0xFF070D14)
+private val NightSurface = Color(0xFF111A25)
+private val NightSurfaceVariant = Color(0xFF16212E)
+private val NightInk = Color(0xFFF8FAFC)
+private val NightMutedInk = Color(0xFFB2BBC6)
+private val NightOutline = Color(0xFF283646)
 
 private val Success = Color(0xFF267C48)
 private val SuccessContainer = Color(0xFFD9F5E2)
@@ -88,7 +89,7 @@ internal val BrandCraftsDarkColorScheme = darkColorScheme(
     surfaceVariant = NightSurfaceVariant,
     onSurfaceVariant = NightMutedInk,
     outline = NightOutline,
-    outlineVariant = Color(0xFF3B2B20),
+    outlineVariant = Color(0xFF283646),
     inverseSurface = Color(0xFFFFEDE2),
     inverseOnSurface = Color(0xFF261B15),
     inversePrimary = BrandOrange,

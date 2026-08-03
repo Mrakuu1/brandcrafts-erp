@@ -11,8 +11,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import com.brandcrafts.erp.R
-import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
-import com.brandcrafts.erp.ui.components.AppTextField
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
 import androidx.compose.ui.unit.dp
@@ -26,17 +24,17 @@ fun StockInScreen(state: StockInUiState, onEvent: (StockInUiEvent) -> Unit) {
             retryLabel = stringResource(R.string.retry), onRetry = { onEvent(StockInUiEvent.RetryClicked) },
             secondaryActionLabel = stringResource(R.string.cancel), onSecondaryAction = { onEvent(StockInUiEvent.CancelClicked) },
         )
-        else -> UniversalFormSheet(
+        else -> InventoryFormSheet(
             title = stringResource(R.string.stock_in_title), primaryActionLabel = stringResource(R.string.stock_in_save),
             onPrimaryAction = { onEvent(StockInUiEvent.SaveClicked) }, onDismissRequest = { onEvent(StockInUiEvent.CancelClicked) },
             primaryActionLoading = state.isSaving, cancelActionLabel = stringResource(R.string.cancel),
         ) {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.errorMessage?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                AppTextField(value = state.materialName, onValueChange = {}, label = stringResource(R.string.stock_in_material), readOnly = true)
-                AppTextField(value = state.quantity, onValueChange = { onEvent(StockInUiEvent.QuantityChanged(it)) }, label = stringResource(R.string.stock_in_quantity), errorMessage = state.quantityError?.let { stringResource(it) }, enabled = !state.isSaving, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                AppTextField(value = state.referenceId, onValueChange = { onEvent(StockInUiEvent.ReferenceChanged(it)) }, label = stringResource(R.string.stock_in_reference), enabled = !state.isSaving)
-                AppTextField(value = state.remarks, onValueChange = { onEvent(StockInUiEvent.RemarksChanged(it)) }, label = stringResource(R.string.stock_in_remarks), enabled = !state.isSaving, singleLine = false)
+                InventoryFormTextField(value = state.materialName, onValueChange = {}, label = stringResource(R.string.stock_in_material), readOnly = true)
+                InventoryFormTextField(value = state.quantity, onValueChange = { onEvent(StockInUiEvent.QuantityChanged(it)) }, label = stringResource(R.string.stock_in_quantity), errorMessage = state.quantityError?.let { stringResource(it) }, enabled = !state.isSaving, keyboardType = KeyboardType.Decimal)
+                InventoryFormTextField(value = state.referenceId, onValueChange = { onEvent(StockInUiEvent.ReferenceChanged(it)) }, label = stringResource(R.string.stock_in_reference), enabled = !state.isSaving)
+                InventoryFormTextField(value = state.remarks, onValueChange = { onEvent(StockInUiEvent.RemarksChanged(it)) }, label = stringResource(R.string.stock_in_remarks), enabled = !state.isSaving, singleLine = false)
             }
         }
     }

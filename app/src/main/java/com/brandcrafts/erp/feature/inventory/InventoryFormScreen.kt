@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,9 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.brandcrafts.erp.R
-import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
-import com.brandcrafts.erp.ui.components.AppTextField
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
 import com.brandcrafts.erp.ui.theme.BrandCraftsTheme
@@ -41,7 +41,7 @@ fun InventoryFormScreen(
             onSecondaryAction = { onEvent(InventoryFormUiEvent.CancelClicked) },
             modifier = modifier,
         )
-        else -> UniversalFormSheet(
+        else -> InventoryFormSheet(
             title = stringResource(uiState.mode.titleRes()),
             primaryActionLabel = stringResource(uiState.mode.saveLabelRes()),
             onPrimaryAction = { onEvent(InventoryFormUiEvent.SaveClicked) },
@@ -50,6 +50,7 @@ fun InventoryFormScreen(
             primaryActionEnabled = !uiState.isSaving,
             cancelActionLabel = stringResource(R.string.cancel),
             modifier = modifier,
+            expanded = true,
         ) {
             InventoryFormFields(uiState = uiState, onEvent = onEvent)
         }
@@ -73,28 +74,28 @@ private fun InventoryFormFields(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
-        AppTextField(
+        InventoryFormTextField(
             value = uiState.name,
             onValueChange = { onEvent(InventoryFormUiEvent.NameChanged(it)) },
             label = stringResource(R.string.inventory_form_name_label),
             errorMessage = uiState.errors.name?.let { stringResource(it) },
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        InventoryFormTextField(
             value = uiState.sku,
             onValueChange = { onEvent(InventoryFormUiEvent.SkuChanged(it)) },
             label = stringResource(R.string.inventory_form_sku_label),
             errorMessage = uiState.errors.sku?.let { stringResource(it) },
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        InventoryFormTextField(
             value = uiState.category,
             onValueChange = { onEvent(InventoryFormUiEvent.CategoryChanged(it)) },
             label = stringResource(R.string.inventory_form_category_label),
             errorMessage = uiState.errors.category?.let { stringResource(it) },
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        InventoryFormTextField(
             value = uiState.unit,
             onValueChange = { onEvent(InventoryFormUiEvent.UnitChanged(it)) },
             label = stringResource(R.string.inventory_form_unit_label),
@@ -129,7 +130,7 @@ private fun InventoryFormFields(
             errorMessage = uiState.errors.sellingPrice?.let { stringResource(it) },
             enabled = !uiState.isSaving,
         )
-        AppTextField(
+        InventoryFormTextField(
             value = uiState.description,
             onValueChange = { onEvent(InventoryFormUiEvent.DescriptionChanged(it)) },
             label = stringResource(R.string.inventory_form_description_label),
@@ -148,6 +149,16 @@ private fun InventoryFormFields(
                 checked = uiState.active,
                 onCheckedChange = { onEvent(InventoryFormUiEvent.ActiveChanged(it)) },
                 enabled = !uiState.isSaving,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFFAAB7C4) else Color(0xFF9C948C),
+                    uncheckedTrackColor = if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFF263543) else Color(0xFFE5E0DB),
+                    uncheckedBorderColor = if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFF344554) else Color(0xFFCFC7C0),
+                    disabledUncheckedThumbColor = if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFF687785) else Color(0xFFB5AEA7),
+                    disabledUncheckedTrackColor = if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFF1C2732) else Color(0xFFEDE9E5),
+                    disabledUncheckedBorderColor = if (MaterialTheme.colorScheme.background.red < .2f) Color(0xFF2B3946) else Color(0xFFDCD6D1),
+                ),
             )
         }
     }
@@ -161,13 +172,13 @@ private fun InventoryNumericField(
     errorMessage: String?,
     enabled: Boolean,
 ) {
-    AppTextField(
+    InventoryFormTextField(
         value = value,
         onValueChange = onValueChange,
         label = label,
         errorMessage = errorMessage,
         enabled = enabled,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardType = KeyboardType.Decimal,
     )
 }
 

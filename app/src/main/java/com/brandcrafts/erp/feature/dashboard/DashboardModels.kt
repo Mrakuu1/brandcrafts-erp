@@ -10,6 +10,7 @@ data class DashboardCurrencyAmount(
 data class AdminDashboardMetrics(
     val totalSales: DashboardCurrencyAmount?,
     val outstandingPayments: DashboardCurrencyAmount?,
+    val overduePayments: DashboardCurrencyAmount?,
     val lowStockCount: Int?,
     val employeeCount: Int?,
     val customerCount: Int?,

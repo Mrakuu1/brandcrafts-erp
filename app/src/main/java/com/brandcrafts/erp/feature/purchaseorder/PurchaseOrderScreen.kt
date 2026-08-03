@@ -1,5 +1,8 @@
 package com.brandcrafts.erp.feature.purchaseorder
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,18 +16,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
@@ -33,8 +38,6 @@ import com.brandcrafts.erp.domain.model.PurchaseOrderStatus
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
-import com.brandcrafts.erp.ui.components.SearchBar
-import com.brandcrafts.erp.ui.components.SectionHeader
 import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
 import java.math.BigDecimal
@@ -48,34 +51,27 @@ fun PurchaseOrderScreen(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SectionHeader(
-                title = stringResource(R.string.purchase_order_title),
-                modifier = Modifier.padding(horizontal = 16.dp),
-                actionLabel = stringResource(R.string.purchase_order_create),
-                onActionClick = { onEvent(PurchaseOrderUiEvent.CreateClicked) },
-            )
-            SearchBar(
-                query = state.query,
-                onQueryChange = { onEvent(PurchaseOrderUiEvent.SearchChanged(it)) },
-                placeholder = stringResource(R.string.purchase_order_search),
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            PurchaseOrderStatusFilter(
-                selected = state.status,
-                onStatusSelected = { onEvent(PurchaseOrderUiEvent.StatusChanged(it)) },
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            if (state.refreshing) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
+    var filtersOpen by remember { mutableStateOf(false) }
+    var pendingStatus by remember(state.status) {
+        mutableStateOf(state.status)
+    }
+    OrdersListScaffold(
+        query = state.query,
+        onQueryChange = { onEvent(PurchaseOrderUiEvent.SearchChanged(it)) },
+        searchPlaceholder = stringResource(R.string.purchase_order_search),
+        refreshing = state.refreshing,
+        onRefresh = { onEvent(PurchaseOrderUiEvent.Refresh) },
+        isFilterActive = state.status != null,
+        onOpenFilters = {
+            pendingStatus = state.status
+            filtersOpen = true
+        },
+        snackbarHostState = snackbarHostState,
+        createAction = OrdersFabAction(stringResource(R.string.purchase_order_create)) {
+            onEvent(PurchaseOrderUiEvent.CreateClicked)
+        },
+        modifier = modifier,
+    ) {
             when {
                 state.loading && state.orders.isEmpty() -> LoadingView(
                     message = stringResource(R.string.purchase_order_loading),
@@ -108,6 +104,19 @@ fun PurchaseOrderScreen(
                     )
                 }
             }
+    }
+    if (filtersOpen) {
+        OrdersFilterBottomSheet(
+            onDismissRequest = { filtersOpen = false },
+            onApply = {
+                onEvent(PurchaseOrderUiEvent.StatusChanged(pendingStatus))
+                filtersOpen = false
+            },
+        ) {
+            PurchaseOrderStatusFilter(
+                selected = pendingStatus,
+                onStatusSelected = { pendingStatus = it },
+            )
         }
     }
 }
@@ -118,23 +127,29 @@ private fun PurchaseOrderStatusFilter(
     onStatusSelected: (PurchaseOrderStatus?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        FilterChip(
-            selected = selected == null,
-            onClick = { onStatusSelected(null) },
-            label = { Text(stringResource(R.string.purchase_order_all_statuses)) },
-        )
-        PurchaseOrderStatus.entries.forEach { status ->
-            FilterChip(
-                selected = selected == status,
-                onClick = { onStatusSelected(status) },
-                label = { Text(stringResource(status.labelRes())) },
+    OrdersFilterChoiceList(
+        modifier = modifier,
+        choices = buildList {
+            add(
+                OrdersFilterChoice(
+                    id = "all",
+                    label = stringResource(R.string.purchase_order_all_statuses),
+                    selected = selected == null,
+                    onSelected = { onStatusSelected(null) },
+                ),
             )
-        }
-    }
+            PurchaseOrderStatus.entries.forEach { status ->
+                add(
+                    OrdersFilterChoice(
+                        id = status.name,
+                        label = stringResource(status.labelRes()),
+                        selected = selected == status,
+                        onSelected = { onStatusSelected(status) },
+                    ),
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -163,7 +178,7 @@ private fun PurchaseOrderList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = orders, key = PurchaseOrderListItemUi::id) { purchaseOrder ->
@@ -191,12 +206,10 @@ private fun PurchaseOrderListItem(
     onCancel: () -> Unit,
 ) {
     val operationInProgress = approving || cancelling
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onOpen,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
+    OrdersDocumentCard(onClick = onOpen) {
         ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = { OrdersDocumentLeadingIcon() },
             headlineContent = { Text(item.number) },
             supportingContent = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -225,26 +238,19 @@ private fun PurchaseOrderListItem(
                             ),
                             style = MaterialTheme.typography.labelSmall,
                         )
-                    } else {
-                        if (item.canEdit) {
-                            TextButton(onClick = onEdit, enabled = !operationInProgress) {
-                                Text(stringResource(R.string.purchase_order_edit))
-                            }
-                        }
-                        if (item.canApprove) {
-                            TextButton(onClick = onApprove, enabled = !operationInProgress) {
-                                Text(stringResource(R.string.purchase_order_approve))
-                            }
-                        }
-                        if (item.canCancel) {
-                            TextButton(onClick = onCancel, enabled = !operationInProgress) {
-                                Text(stringResource(R.string.purchase_order_cancel))
-                            }
-                        }
                     }
                 }
             },
         )
+        if (!operationInProgress) {
+            OrdersCardActions(
+                buildList {
+                    if (item.canEdit) add(OrdersCardAction(stringResource(R.string.purchase_order_edit), Icons.Outlined.Edit, onEdit))
+                    if (item.canApprove) add(OrdersCardAction(stringResource(R.string.purchase_order_approve), Icons.Outlined.Edit, onApprove))
+                    if (item.canCancel) add(OrdersCardAction(stringResource(R.string.purchase_order_cancel), Icons.Outlined.Edit, onCancel))
+                },
+            )
+        }
     }
 }
 

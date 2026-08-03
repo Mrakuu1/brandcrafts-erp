@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -16,12 +19,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.brandcrafts.erp.R
 import com.brandcrafts.erp.core.result.AuthenticationError
 import com.brandcrafts.erp.feature.auth.LoginRoute
@@ -30,7 +36,7 @@ import com.brandcrafts.erp.feature.dashboard.DashboardRoute
 import com.brandcrafts.erp.feature.contacts.ContactsRoute
 import com.brandcrafts.erp.feature.contacts.ContactFormMode
 import com.brandcrafts.erp.feature.contacts.ContactFormRoute
-import com.brandcrafts.erp.feature.employee.EmployeeManagementRoute
+import com.brandcrafts.erp.feature.contacts.PeopleTab
 import com.brandcrafts.erp.feature.quotation.QuotationRoute
 import com.brandcrafts.erp.feature.quotation.QuotationDetailsRoute
 import com.brandcrafts.erp.feature.quotation.QuotationFormRoute
@@ -50,6 +56,7 @@ import com.brandcrafts.erp.feature.inventory.StockOutRoute
 import com.brandcrafts.erp.ui.CurrentUserProvider
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
+import com.brandcrafts.erp.ui.theme.BrandMotion
 import kotlinx.coroutines.launch
 
 private const val LOGIN_ROUTE = "login"
@@ -66,6 +73,7 @@ private const val CONTACT_EDIT_ROUTE = "contacts/form/edit/{contactId}/_"
 private const val EMPLOYEE_FORM_ROUTE = "employees/form/{mode}/{employeeId}"
 private const val EMPLOYEE_CREATE_ROUTE = "employees/form/create/_"
 private const val EMPLOYEE_EDIT_ROUTE = "employees/form/edit/{employeeId}"
+private const val PEOPLE_EMPLOYEES_ROUTE = "contacts/employees"
 private const val QUOTATION_CREATE_ROUTE = "quotation/create"
 private const val QUOTATION_EDIT_ROUTE = "quotation/edit/{quotationId}"
 private const val QUOTATION_DETAILS_ROUTE = "quotation/details/{quotationId}"
@@ -79,6 +87,7 @@ private const val DELIVERY_CHALLAN_CREATE_ROUTE = "deliverychallans/create"
 private const val DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE = "deliverychallans/create/from-invoice/{invoiceId}"
 private const val DELIVERY_CHALLAN_EDIT_ROUTE = "deliverychallans/edit/{challanId}"
 private const val DELIVERY_CHALLAN_DETAILS_ROUTE = "deliverychallans/details/{challanId}"
+private val formDialogProperties = DialogProperties(usePlatformDefaultWidth = false)
 
 enum class AppDestination(val route: String, val titleRes: Int) {
     HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
@@ -170,7 +179,20 @@ private fun AppSessionNavHost(
     val quotationUpdatedMessage = stringResource(R.string.quotation_form_update_success)
     val quotationUnauthorizedMessage = stringResource(R.string.quotation_form_unauthorized_description)
     val quotationBlockedMessage = stringResource(R.string.quotation_form_edit_unavailable_description)
-    val onEmployeeManagement = { navController.navigate(AppDestination.EMPLOYEES.route) }
+    val onEmployeeManagement = {
+        navController.navigate(PEOPLE_EMPLOYEES_ROUTE) {
+            launchSingleTop = true
+        }
+    }
+    val navigateToMainDestination: (AppDestination) -> Unit = { destination ->
+        navController.navigate(destination.route) {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+        }
+    }
     val openInvoiceDetailsAfterSave: (String) -> Unit = { invoiceId ->
         navController.popBackStack()
         if (navController.currentDestination?.route == INVOICE_DETAILS_ROUTE) {
@@ -178,8 +200,16 @@ private fun AppSessionNavHost(
         }
         navController.navigate(invoiceDetailsRoute(invoiceId))
     }
-    NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
-        if (startDestination == LOGIN_ROUTE) {
+    if (startDestination == LOGIN_ROUTE) {
+        NavHost(
+            navController = navController,
+            startDestination = LOGIN_ROUTE,
+            modifier = modifier,
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, BrandMotion.standard()) + fadeIn(BrandMotion.standard()) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, BrandMotion.standard()) + fadeOut(BrandMotion.standard()) },
+            popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, BrandMotion.standard()) + fadeIn(BrandMotion.standard()) },
+            popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, BrandMotion.standard()) + fadeOut(BrandMotion.standard()) },
+        ) {
             composable(LOGIN_ROUTE) {
                 LoginRoute(
                     onSignInSuccess = onSignInSuccess,
@@ -189,31 +219,43 @@ private fun AppSessionNavHost(
             composable(FORGOT_PASSWORD_ROUTE) {
                 ForgotPasswordRoute(onNavigateToLogin = { navController.popBackStack() })
             }
-        } else {
+        }
+    } else {
+        AppNavigationShell(
+            navController = navController,
+            onLogout = onLogoutConfirmed,
+            isLogoutInProgress = isLogoutInProgress,
+            logoutErrorMessage = logoutErrorMessage,
+            onLogoutErrorShown = onLogoutErrorShown,
+            onUnavailableFeature = onUnavailableFeature,
+            snackbarHostState = snackbarHostState,
+            onEmployeeManagement = onEmployeeManagement,
+            modifier = modifier,
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = MAIN_SHELL_ROUTE,
+                modifier = Modifier.fillMaxSize(),
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, BrandMotion.standard()) + fadeIn(BrandMotion.standard()) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, BrandMotion.standard()) + fadeOut(BrandMotion.standard()) },
+                popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, BrandMotion.standard()) + fadeIn(BrandMotion.standard()) },
+                popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, BrandMotion.standard()) + fadeOut(BrandMotion.standard()) },
+            ) {
             navigation(startDestination = AppDestination.HOME.route, route = MAIN_SHELL_ROUTE) {
                 AppDestination.entries
                     .filter { it in setOf(AppDestination.HOME, AppDestination.STOCK, AppDestination.ORDERS, AppDestination.CONTACTS) }
                     .forEach { destination ->
                         composable(destination.route) {
-                            AppNavigationShell(
-                                navController = navController,
-                                onLogout = onLogoutConfirmed,
-                                isLogoutInProgress = isLogoutInProgress,
-                                logoutErrorMessage = logoutErrorMessage,
-                                onLogoutErrorShown = onLogoutErrorShown,
-                                onUnavailableFeature = onUnavailableFeature,
-                                snackbarHostState = snackbarHostState,
-                                onEmployeeManagement = onEmployeeManagement,
-                            ) {
                                 when (destination) {
                                     AppDestination.HOME -> DashboardRoute(
-                                        onAddStockClick = { navController.navigate(AppDestination.STOCK.route) },
+                                        onAddStockClick = { navigateToMainDestination(AppDestination.STOCK) },
                                         onInvoiceClick = { navController.navigate(INVOICE_CREATE_ROUTE) },
                                         onQuotationClick = { navController.navigate(QUOTATION_CREATE_ROUTE) },
                                         onEmployeeManagementClick = onEmployeeManagement,
                                         onStockInClick = onUnavailableFeature,
                                         onStockOutClick = onUnavailableFeature,
                                         onMaterialUsageClick = onUnavailableFeature,
+                                        onViewInventoryClick = { navigateToMainDestination(AppDestination.STOCK) },
                                     )
                                     AppDestination.STOCK -> InventoryRoute(
                                         onItemDetailsClick = { onUnavailableFeature() },
@@ -228,6 +270,8 @@ private fun AppSessionNavHost(
                                         onAddSupplierClick = { navController.navigate(CONTACT_CREATE_SUPPLIER_ROUTE) },
                                         onEditCustomerClick = { id -> navController.navigate(contactEditRoute(id)) },
                                         onEditSupplierClick = { id -> navController.navigate(contactEditRoute(id)) },
+                                        onAddEmployeeClick = { navController.navigate(EMPLOYEE_CREATE_ROUTE) },
+                                        onEditEmployeeClick = { uid -> navController.navigate(employeeEditRoute(uid)) },
                                     )
                                     AppDestination.ORDERS -> OrdersRoute(
                                         onCreateQuotation = { navController.navigate(QUOTATION_CREATE_ROUTE) },
@@ -247,132 +291,93 @@ private fun AppSessionNavHost(
                                     )
                                     else -> PlaceholderScreen(title = stringResource(destination.titleRes))
                                 }
-                            }
                         }
                     }
-                composable(INVENTORY_CREATE_ROUTE) {
-                    AppNavigationShell(
-                        navController = navController,
-                        onLogout = onLogoutConfirmed,
-                        isLogoutInProgress = isLogoutInProgress,
-                        logoutErrorMessage = logoutErrorMessage,
-                        onLogoutErrorShown = onLogoutErrorShown,
-                        onUnavailableFeature = onUnavailableFeature,
-                        snackbarHostState = snackbarHostState,
-                    ) {
-                        InventoryFormRoute(
-                            onNavigateBack = { navController.popBackStack() },
-                            onItemSaved = {
-                                navController.popBackStack()
-                                coroutineScope.launch { snackbarHostState.showSnackbar(inventorySavedMessage) }
-                            },
-                        )
-                    }
+                dialog(INVENTORY_CREATE_ROUTE, dialogProperties = formDialogProperties) {
+                    InventoryFormRoute(
+                        onNavigateBack = { navController.popBackStack() },
+                        onItemSaved = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(inventorySavedMessage) }
+                        },
+                    )
                 }
-                composable(INVENTORY_EDIT_ROUTE) {
-                    AppNavigationShell(
-                        navController = navController,
-                        onLogout = onLogoutConfirmed,
-                        isLogoutInProgress = isLogoutInProgress,
-                        logoutErrorMessage = logoutErrorMessage,
-                        onLogoutErrorShown = onLogoutErrorShown,
-                        onUnavailableFeature = onUnavailableFeature,
-                        snackbarHostState = snackbarHostState,
-                    ) {
-                        InventoryFormRoute(
-                            onNavigateBack = { navController.popBackStack() },
-                            onItemSaved = {
-                                navController.popBackStack()
-                                coroutineScope.launch { snackbarHostState.showSnackbar(inventorySavedMessage) }
-                            },
-                        )
-                    }
+                dialog(INVENTORY_EDIT_ROUTE, dialogProperties = formDialogProperties) {
+                    InventoryFormRoute(
+                        onNavigateBack = { navController.popBackStack() },
+                        onItemSaved = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(inventorySavedMessage) }
+                        },
+                    )
                 }
-                composable(STOCK_IN_ROUTE) {
-                    AppNavigationShell(
-                        navController = navController, onLogout = onLogoutConfirmed, isLogoutInProgress = isLogoutInProgress,
-                        logoutErrorMessage = logoutErrorMessage, onLogoutErrorShown = onLogoutErrorShown,
-                        onUnavailableFeature = onUnavailableFeature, snackbarHostState = snackbarHostState,
-                    ) {
-                        StockInRoute(
-                            onNavigateBack = { navController.popBackStack() },
-                            onSaved = {
-                                navController.popBackStack()
-                                coroutineScope.launch { snackbarHostState.showSnackbar(stockInSavedMessage) }
-                            },
-                        )
-                    }
+                dialog(STOCK_IN_ROUTE, dialogProperties = formDialogProperties) {
+                    StockInRoute(
+                        onNavigateBack = { navController.popBackStack() },
+                        onSaved = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(stockInSavedMessage) }
+                        },
+                    )
                 }
-                composable(STOCK_OUT_ROUTE) { AppNavigationShell(navController,onLogoutConfirmed,isLogoutInProgress,logoutErrorMessage,onLogoutErrorShown,onUnavailableFeature,snackbarHostState) { StockOutRoute(back = { navController.popBackStack() }, saved = { navController.popBackStack(); coroutineScope.launch { snackbarHostState.showSnackbar(stockOutSavedMessage) } }) } }
+                dialog(STOCK_OUT_ROUTE, dialogProperties = formDialogProperties) {
+                    StockOutRoute(
+                        back = { navController.popBackStack() },
+                        saved = {
+                            navController.popBackStack()
+                            coroutineScope.launch { snackbarHostState.showSnackbar(stockOutSavedMessage) }
+                        },
+                    )
+                }
+                composable(PEOPLE_EMPLOYEES_ROUTE) {
+                    ContactsRoute(
+                        initialTab = PeopleTab.EMPLOYEES,
+                        onAddCustomerClick = { navController.navigate(CONTACT_CREATE_CUSTOMER_ROUTE) },
+                        onAddSupplierClick = { navController.navigate(CONTACT_CREATE_SUPPLIER_ROUTE) },
+                        onEditCustomerClick = { id -> navController.navigate(contactEditRoute(id)) },
+                        onEditSupplierClick = { id -> navController.navigate(contactEditRoute(id)) },
+                        onAddEmployeeClick = { navController.navigate(EMPLOYEE_CREATE_ROUTE) },
+                        onEditEmployeeClick = { uid -> navController.navigate(employeeEditRoute(uid)) },
+                    )
+                }
                 composable(AppDestination.EMPLOYEES.route) {
-                    AppNavigationShell(
-                        navController = navController,
-                        onLogout = onLogoutConfirmed,
-                        isLogoutInProgress = isLogoutInProgress,
-                        logoutErrorMessage = logoutErrorMessage,
-                        onLogoutErrorShown = onLogoutErrorShown,
-                        onUnavailableFeature = onUnavailableFeature,
-                        snackbarHostState = snackbarHostState,
-                        onEmployeeManagement = onEmployeeManagement,
-                    ) {
-                        EmployeeManagementRoute(
-                            onUnauthorized = { message ->
-                                navController.popBackStack()
-                                coroutineScope.launch { snackbarHostState.showSnackbar(message) }
-                            },
-                            onCreateEmployee = { navController.navigate(EMPLOYEE_CREATE_ROUTE) },
-                            onEditEmployee = { uid -> navController.navigate(employeeEditRoute(uid)) },
-                        )
-                    }
+                    ContactsRoute(
+                        initialTab = PeopleTab.EMPLOYEES,
+                        onAddCustomerClick = { navController.navigate(CONTACT_CREATE_CUSTOMER_ROUTE) },
+                        onAddSupplierClick = { navController.navigate(CONTACT_CREATE_SUPPLIER_ROUTE) },
+                        onEditCustomerClick = { id -> navController.navigate(contactEditRoute(id)) },
+                        onEditSupplierClick = { id -> navController.navigate(contactEditRoute(id)) },
+                        onAddEmployeeClick = { navController.navigate(EMPLOYEE_CREATE_ROUTE) },
+                        onEditEmployeeClick = { uid -> navController.navigate(employeeEditRoute(uid)) },
+                    )
                 }
-                composable(EMPLOYEE_FORM_ROUTE) {
-                    AppNavigationShell(
-                        navController = navController,
-                        onLogout = onLogoutConfirmed,
-                        isLogoutInProgress = isLogoutInProgress,
-                        logoutErrorMessage = logoutErrorMessage,
-                        onLogoutErrorShown = onLogoutErrorShown,
-                        onUnavailableFeature = onUnavailableFeature,
-                        snackbarHostState = snackbarHostState,
-                        onEmployeeManagement = onEmployeeManagement,
-                    ) {
-                        EmployeeFormRoute(
-                            onNavigateBack = { navController.popBackStack() },
-                            onEmployeeSaved = { mode ->
-                                navController.popBackStack()
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (mode == EmployeeFormMode.CREATE) employeeCreatedMessage else employeeUpdatedMessage,
-                                    )
-                                }
-                            },
-                        )
-                    }
+                dialog(EMPLOYEE_FORM_ROUTE, dialogProperties = formDialogProperties) {
+                    EmployeeFormRoute(
+                        onNavigateBack = { navController.popBackStack() },
+                        onEmployeeSaved = { mode ->
+                            navController.popBackStack()
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (mode == EmployeeFormMode.CREATE) employeeCreatedMessage else employeeUpdatedMessage,
+                                )
+                            }
+                        },
+                    )
                 }
-                composable(CONTACT_FORM_ROUTE) {
-                    AppNavigationShell(
-                        navController = navController,
-                        onLogout = onLogoutConfirmed,
-                        isLogoutInProgress = isLogoutInProgress,
-                        logoutErrorMessage = logoutErrorMessage,
-                        onLogoutErrorShown = onLogoutErrorShown,
-                        onUnavailableFeature = onUnavailableFeature,
-                        snackbarHostState = snackbarHostState,
-                    ) {
-                        ContactFormRoute(
-                            onNavigateBack = { navController.popBackStack() },
-                            onContactSaved = { mode ->
-                                navController.popBackStack()
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (mode == ContactFormMode.CREATE) contactCreatedMessage else contactUpdatedMessage,
-                                    )
-                                }
-                            },
-                        )
-                    }
+                dialog(CONTACT_FORM_ROUTE, dialogProperties = formDialogProperties) {
+                    ContactFormRoute(
+                        onNavigateBack = { navController.popBackStack() },
+                        onContactSaved = { mode ->
+                            navController.popBackStack()
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (mode == ContactFormMode.CREATE) contactCreatedMessage else contactUpdatedMessage,
+                                )
+                            }
+                        },
+                    )
                 }
-                composable(QUOTATION_CREATE_ROUTE) {
+                dialog(QUOTATION_CREATE_ROUTE, dialogProperties = formDialogProperties) {
                     QuotationFormRoute(
                         onSaved = {
                             navController.popBackStack()
@@ -389,7 +394,7 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
-                composable(QUOTATION_EDIT_ROUTE) {
+                dialog(QUOTATION_EDIT_ROUTE, dialogProperties = formDialogProperties) {
                     QuotationFormRoute(
                         onSaved = {
                             navController.popBackStack()
@@ -407,16 +412,19 @@ private fun AppSessionNavHost(
                     )
                 }
                 composable(QUOTATION_DETAILS_ROUTE) {
-                    QuotationDetailsRoute(onBack = { navController.popBackStack() })
+                    QuotationDetailsRoute(
+                        onBack = { navController.popBackStack() },
+                        onEdit = { quotationId -> navController.navigate(quotationEditRoute(quotationId)) },
+                    )
                 }
-                composable(PURCHASE_ORDER_CREATE_ROUTE) {
+                dialog(PURCHASE_ORDER_CREATE_ROUTE, dialogProperties = formDialogProperties) {
                     PurchaseOrderFormRoute(
                         onBack = { navController.popBackStack() },
                         onPurchaseOrderSaved = { id -> navController.navigate(purchaseOrderDetailsRoute(id)) { popUpTo(PURCHASE_ORDER_CREATE_ROUTE) { inclusive = true } } },
                         onUnauthorized = { message -> navController.popBackStack(); coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
                     )
                 }
-                composable(PURCHASE_ORDER_EDIT_ROUTE) {
+                dialog(PURCHASE_ORDER_EDIT_ROUTE, dialogProperties = formDialogProperties) {
                     PurchaseOrderFormRoute(
                         onBack = { navController.popBackStack() },
                         onPurchaseOrderSaved = { id -> navController.navigate(purchaseOrderDetailsRoute(id)) { popUpTo(PURCHASE_ORDER_EDIT_ROUTE) { inclusive = true } } },
@@ -430,7 +438,7 @@ private fun AppSessionNavHost(
                         onUnauthorized = { message -> navController.popBackStack(); coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
                     )
                 }
-                composable(INVOICE_CREATE_ROUTE) {
+                dialog(INVOICE_CREATE_ROUTE, dialogProperties = formDialogProperties) {
                     InvoiceFormRoute(
                         onBack = { navController.popBackStack() },
                         onInvoiceSaved = openInvoiceDetailsAfterSave,
@@ -440,7 +448,7 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
-                composable(INVOICE_EDIT_ROUTE) {
+                dialog(INVOICE_EDIT_ROUTE, dialogProperties = formDialogProperties) {
                     InvoiceFormRoute(
                         onBack = { navController.popBackStack() },
                         onInvoiceSaved = openInvoiceDetailsAfterSave,
@@ -460,7 +468,7 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
-                composable(DELIVERY_CHALLAN_CREATE_ROUTE) {
+                dialog(DELIVERY_CHALLAN_CREATE_ROUTE, dialogProperties = formDialogProperties) {
                     DeliveryChallanFormRoute(
                         onBack = { navController.popBackStack() },
                         onSaved = { id ->
@@ -474,7 +482,7 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
-                composable(DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE) {
+                dialog(DELIVERY_CHALLAN_CREATE_FROM_INVOICE_ROUTE, dialogProperties = formDialogProperties) {
                     DeliveryChallanFormRoute(
                         onBack = { navController.popBackStack() },
                         onSaved = { id ->
@@ -488,7 +496,7 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
-                composable(DELIVERY_CHALLAN_EDIT_ROUTE) {
+                dialog(DELIVERY_CHALLAN_EDIT_ROUTE, dialogProperties = formDialogProperties) {
                     DeliveryChallanFormRoute(
                         onBack = { navController.popBackStack() },
                         onSaved = { id ->
@@ -512,6 +520,7 @@ private fun AppSessionNavHost(
                         },
                     )
                 }
+            }
             }
         }
     }

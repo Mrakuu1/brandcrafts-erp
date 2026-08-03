@@ -1,5 +1,8 @@
 package com.brandcrafts.erp.feature.deliverychallan
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,39 +12,42 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.brandcrafts.erp.R
 import com.brandcrafts.erp.domain.model.DeliveryChallanStatus
-import com.brandcrafts.erp.ui.components.AppTopBar
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
-import com.brandcrafts.erp.ui.components.SearchBar
 import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
-import com.brandcrafts.erp.ui.components.TopBarAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFabAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterBottomSheet
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterChoice
+import com.brandcrafts.erp.feature.purchaseorder.OrdersFilterChoiceList
+import com.brandcrafts.erp.feature.purchaseorder.OrdersListScaffold
+import com.brandcrafts.erp.feature.purchaseorder.OrdersDocumentCard
+import com.brandcrafts.erp.feature.purchaseorder.OrdersDocumentLeadingIcon
+import com.brandcrafts.erp.feature.purchaseorder.OrdersCardAction
+import com.brandcrafts.erp.feature.purchaseorder.OrdersCardActions
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,64 +59,36 @@ fun DeliveryChallanListScreen(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            AppTopBar(
-                title = stringResource(R.string.delivery_challan_title),
-                actions = buildList {
-                    add(
-                        TopBarAction(
-                            icon = Icons.Outlined.Refresh,
-                            contentDescription = stringResource(R.string.retry),
-                            onClick = { onEvent(DeliveryChallanListUiEvent.Refresh) },
-                        ),
-                    )
-                    if (state.canCreateIndependent) {
-                        add(
-                            TopBarAction(
-                                icon = Icons.Outlined.Add,
-                                contentDescription = stringResource(R.string.delivery_challan_create),
-                                onClick = { onEvent(DeliveryChallanListUiEvent.CreateIndependentClicked) },
-                            ),
-                        )
-                    }
-                },
-            )
+    var filtersOpen by remember { mutableStateOf(false) }
+    var pendingStatus by remember(state.statusFilter) { mutableStateOf(state.statusFilter) }
+    OrdersListScaffold(
+        query = state.searchQuery,
+        onQueryChange = { onEvent(DeliveryChallanListUiEvent.SearchChanged(it)) },
+        searchPlaceholder = stringResource(R.string.delivery_challan_search),
+        refreshing = state.isRefreshing,
+        onRefresh = { onEvent(DeliveryChallanListUiEvent.Refresh) },
+        isFilterActive = state.statusFilter != null,
+        onOpenFilters = {
+            pendingStatus = state.statusFilter
+            filtersOpen = true
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SearchBar(
-                query = state.searchQuery,
-                onQueryChange = { onEvent(DeliveryChallanListUiEvent.SearchChanged(it)) },
-                placeholder = stringResource(R.string.delivery_challan_search),
-                searchIcon = Icons.Outlined.Search,
-                searchIconContentDescription = stringResource(R.string.delivery_challan_search),
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            DeliveryChallanStatusFilters(
-                selected = state.statusFilter,
-                onSelected = { onEvent(DeliveryChallanListUiEvent.StatusChanged(it)) },
-            )
-            if (state.canCreateFromInvoice) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TextButton(
-                        onClick = { onEvent(DeliveryChallanListUiEvent.CreateFromInvoiceClicked) },
-                    ) {
-                        Text(stringResource(R.string.delivery_challan_create_from_invoice))
-                    }
-                }
+        snackbarHostState = snackbarHostState,
+        createAction = if (state.canCreateIndependent) {
+            OrdersFabAction(stringResource(R.string.delivery_challan_create)) {
+                onEvent(DeliveryChallanListUiEvent.CreateIndependentClicked)
             }
-            if (state.isRefreshing) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        } else {
+            null
+        },
+        alternateCreateAction = if (state.canCreateFromInvoice) {
+            OrdersFabAction(stringResource(R.string.delivery_challan_create_from_invoice)) {
+                onEvent(DeliveryChallanListUiEvent.CreateFromInvoiceClicked)
             }
+        } else {
+            null
+        },
+        modifier = modifier,
+    ) {
             when {
                 state.content is DeliveryChallanListContent.Loading && state.rows.isEmpty() -> {
                     LoadingView(message = stringResource(R.string.delivery_challan_loading))
@@ -158,6 +136,19 @@ fun DeliveryChallanListScreen(
                     )
                 }
             }
+    }
+    if (filtersOpen) {
+        OrdersFilterBottomSheet(
+            onDismissRequest = { filtersOpen = false },
+            onApply = {
+                onEvent(DeliveryChallanListUiEvent.StatusChanged(pendingStatus))
+                filtersOpen = false
+            },
+        ) {
+            DeliveryChallanStatusFilters(
+                selected = pendingStatus,
+                onSelected = { pendingStatus = it },
+            )
         }
     }
 }
@@ -167,25 +158,28 @@ private fun DeliveryChallanStatusFilters(
     selected: DeliveryChallanStatus?,
     onSelected: (DeliveryChallanStatus?) -> Unit,
 ) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        item {
-            FilterChip(
-                selected = selected == null,
-                onClick = { onSelected(null) },
-                label = { Text(stringResource(R.string.delivery_challan_all_statuses)) },
+    OrdersFilterChoiceList(
+        choices = buildList {
+            add(
+                OrdersFilterChoice(
+                    id = "all",
+                    label = stringResource(R.string.delivery_challan_all_statuses),
+                    selected = selected == null,
+                    onSelected = { onSelected(null) },
+                ),
             )
-        }
-        items(DeliveryChallanStatus.entries) { status ->
-            FilterChip(
-                selected = selected == status,
-                onClick = { onSelected(status) },
-                label = { Text(stringResource(status.labelRes())) },
-            )
-        }
-    }
+            DeliveryChallanStatus.entries.forEach { status ->
+                add(
+                    OrdersFilterChoice(
+                        id = status.name,
+                        label = stringResource(status.labelRes()),
+                        selected = selected == status,
+                        onSelected = { onSelected(status) },
+                    ),
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -213,7 +207,7 @@ private fun DeliveryChallanRows(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = rows, key = DeliveryChallanListItem::id) { row ->
@@ -238,12 +232,10 @@ private fun DeliveryChallanCard(
     onDispatch: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onOpen,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
+    OrdersDocumentCard(onClick = onOpen) {
         ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = { OrdersDocumentLeadingIcon() },
             headlineContent = { Text(row.number, style = MaterialTheme.typography.titleMedium) },
             supportingContent = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -265,24 +257,19 @@ private fun DeliveryChallanCard(
                     )
                     if (operation != null) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    } else {
-                        if (row.canEdit) {
-                            TextButton(onClick = onEdit) { Text(stringResource(R.string.delivery_challan_edit)) }
-                        }
-                        if (row.canDispatch) {
-                            TextButton(onClick = onDispatch) {
-                                Text(stringResource(R.string.delivery_challan_dispatch))
-                            }
-                        }
-                        if (row.canCancel) {
-                            TextButton(onClick = onCancel) {
-                                Text(stringResource(R.string.delivery_challan_cancel))
-                            }
-                        }
                     }
                 }
             },
         )
+        if (operation == null) {
+            OrdersCardActions(
+                buildList {
+                    if (row.canEdit) add(OrdersCardAction(stringResource(R.string.delivery_challan_edit), Icons.Outlined.Edit, onEdit))
+                    if (row.canDispatch) add(OrdersCardAction(stringResource(R.string.delivery_challan_dispatch), Icons.Outlined.Edit, onDispatch))
+                    if (row.canCancel) add(OrdersCardAction(stringResource(R.string.delivery_challan_cancel), Icons.Outlined.Edit, onCancel))
+                },
+            )
+        }
     }
 }
 

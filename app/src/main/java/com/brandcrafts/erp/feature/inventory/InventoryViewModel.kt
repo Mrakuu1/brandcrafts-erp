@@ -28,6 +28,7 @@ class InventoryViewModel @Inject constructor(
 
     private var observedItems: List<InventoryListItem> = emptyList()
     private var searchQuery: String = ""
+    private var selectedFilter: InventoryFilter = InventoryFilter.ALL
     private var observationJob: Job? = null
 
     init {
@@ -40,19 +41,22 @@ class InventoryViewModel @Inject constructor(
                 searchQuery = event.query
                 updateFilteredState()
             }
+            is InventoryUiEvent.FilterChanged -> {
+                selectedFilter = event.filter
+                updateFilteredState()
+            }
             is InventoryUiEvent.ItemClicked -> sendEffect(InventoryUiEffect.NavigateToItemDetails(event.itemId))
             is InventoryUiEvent.EditItemClicked -> sendEffect(InventoryUiEffect.NavigateToEditItem(event.itemId))
             is InventoryUiEvent.StockInClicked -> sendEffect(InventoryUiEffect.NavigateToStockIn(event.itemId))
             is InventoryUiEvent.StockOutClicked -> sendEffect(InventoryUiEffect.NavigateToStockOut(event.itemId))
             InventoryUiEvent.AddItemClicked -> sendEffect(InventoryUiEffect.NavigateToCreateItem)
-            InventoryUiEvent.FilterClicked -> sendEffect(InventoryUiEffect.ShowMessage(R.string.feature_coming_later))
             InventoryUiEvent.RetryClicked -> observeItems()
         }
     }
 
     private fun observeItems() {
         observationJob?.cancel()
-        _uiState.value = InventoryUiState.Loading(searchQuery)
+        _uiState.value = InventoryUiState.Loading(searchQuery, selectedFilter)
         observationJob = viewModelScope.launch {
             observeInventoryItems().collect { result ->
                 when (result) {
@@ -61,7 +65,11 @@ class InventoryViewModel @Inject constructor(
                         updateFilteredState()
                     }
                     is InventoryResult.Error -> {
-                        _uiState.value = InventoryUiState.Error(searchQuery, result.error.toInventoryErrorType())
+                        _uiState.value = InventoryUiState.Error(
+                            searchQuery = searchQuery,
+                            type = result.error.toInventoryErrorType(),
+                            filter = selectedFilter,
+                        )
                     }
                 }
             }
@@ -71,15 +79,22 @@ class InventoryViewModel @Inject constructor(
     private fun updateFilteredState() {
         val normalizedQuery = searchQuery.trim()
         val filteredItems = observedItems.filter { item ->
-            normalizedQuery.isBlank() ||
+            val matchesQuery = normalizedQuery.isBlank() ||
                 item.name.contains(normalizedQuery, ignoreCase = true) ||
                 item.sku.contains(normalizedQuery, ignoreCase = true) ||
                 item.category.contains(normalizedQuery, ignoreCase = true)
+            val matchesFilter = when (selectedFilter) {
+                InventoryFilter.ALL -> true
+                InventoryFilter.LOW_STOCK -> item.isLowStock
+                InventoryFilter.ACTIVE -> item.active
+                InventoryFilter.INACTIVE -> !item.active
+            }
+            matchesQuery && matchesFilter
         }
         _uiState.value = if (filteredItems.isEmpty()) {
-            InventoryUiState.Empty(searchQuery)
+            InventoryUiState.Empty(searchQuery, selectedFilter)
         } else {
-            InventoryUiState.Content(searchQuery, filteredItems)
+            InventoryUiState.Content(searchQuery, filteredItems, selectedFilter)
         }
     }
 

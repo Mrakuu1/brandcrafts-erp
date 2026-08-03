@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
@@ -32,6 +33,8 @@ import com.brandcrafts.erp.R
 import com.brandcrafts.erp.domain.model.QuotationStatus
 import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
 import com.brandcrafts.erp.ui.components.AppTextField
+import com.brandcrafts.erp.ui.components.formOutlinedTextFieldColors
+import com.brandcrafts.erp.ui.components.formDropdownMenuContainerColor
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
@@ -80,6 +83,8 @@ fun QuotationFormScreen(
             primaryActionLoading = state.saving,
             primaryActionEnabled = state.saveEnabled,
             cancelActionLabel = stringResource(R.string.cancel),
+            expanded = true,
+            peopleStyle = true,
             modifier = modifier,
         ) {
             QuotationFormFields(state, onEvent)
@@ -182,9 +187,11 @@ fun QuotationCustomerSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { { Text(it) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            shape = MaterialTheme.shapes.small,
+            colors = formOutlinedTextFieldColors(),
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = formDropdownMenuContainerColor(), tonalElevation = 0.dp) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option.label, maxLines = 2, overflow = TextOverflow.Ellipsis) },
@@ -221,9 +228,11 @@ fun QuotationInventorySelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { { Text(it) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            shape = MaterialTheme.shapes.small,
+            colors = formOutlinedTextFieldColors(),
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = formDropdownMenuContainerColor(), tonalElevation = 0.dp) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = {
@@ -258,7 +267,9 @@ private fun QuotationDateSelector(
         isError = errorMessage != null,
         supportingText = errorMessage?.let { { Text(it) } },
         trailingIcon = { androidx.compose.material3.IconButton(onClick = { showingPicker = true }, enabled = enabled) { androidx.compose.material3.Icon(Icons.Outlined.CalendarToday, stringResource(R.string.quotation_select_valid_until)) } },
-        modifier = Modifier.fillMaxWidth().clickable(enabled = enabled) { showingPicker = true },
+        modifier = Modifier.fillMaxWidth().height(56.dp).clickable(enabled = enabled) { showingPicker = true },
+        shape = MaterialTheme.shapes.small,
+        colors = formOutlinedTextFieldColors(),
     )
     if (showingPicker) {
         DatePickerDialog(

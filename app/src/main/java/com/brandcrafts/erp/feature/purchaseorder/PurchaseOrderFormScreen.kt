@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
@@ -28,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +38,8 @@ import com.brandcrafts.erp.R
 import com.brandcrafts.erp.core.format.formatIndianCurrency
 import com.brandcrafts.erp.ui.bottomsheet.UniversalFormSheet
 import com.brandcrafts.erp.ui.components.AppTextField
+import com.brandcrafts.erp.ui.components.formOutlinedTextFieldColors
+import com.brandcrafts.erp.ui.components.formDropdownMenuContainerColor
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
@@ -58,6 +62,7 @@ fun PurchaseOrderFormScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier,
+        containerColor = Color.Transparent,
     ) { innerPadding ->
         when {
             state.loading -> LoadingView(
@@ -88,6 +93,8 @@ fun PurchaseOrderFormScreen(
                 primaryActionLoading = state.saving,
                 primaryActionEnabled = !state.loading && !state.saving && state.editingAllowed,
                 cancelActionLabel = stringResource(R.string.cancel),
+                expanded = true,
+                peopleStyle = true,
                 modifier = Modifier.padding(innerPadding),
             ) {
                 PurchaseOrderFormFields(state = state, onEvent = onEvent)
@@ -202,9 +209,11 @@ private fun PurchaseOrderSupplierSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { message -> { Text(message) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            shape = MaterialTheme.shapes.small,
+            colors = formOutlinedTextFieldColors(),
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = formDropdownMenuContainerColor(), tonalElevation = 0.dp) {
             options.forEach { supplier ->
                 DropdownMenuItem(
                     text = { Text(supplierLabel(supplier), maxLines = 2, overflow = TextOverflow.Ellipsis) },
@@ -304,9 +313,11 @@ private fun PurchaseOrderInventorySelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { message -> { Text(message) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            shape = MaterialTheme.shapes.small,
+            colors = formOutlinedTextFieldColors(),
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = formDropdownMenuContainerColor(), tonalElevation = 0.dp) {
             options.forEach { item ->
                 DropdownMenuItem(
                     text = {
@@ -359,7 +370,9 @@ private fun PurchaseOrderDateField(
                 }
             }
         },
-        modifier = Modifier.fillMaxWidth().clickable(enabled = enabled) { showingPicker = true },
+        modifier = Modifier.fillMaxWidth().height(56.dp).clickable(enabled = enabled) { showingPicker = true },
+        shape = MaterialTheme.shapes.small,
+        colors = formOutlinedTextFieldColors(),
     )
     if (showingPicker) {
         DatePickerDialog(

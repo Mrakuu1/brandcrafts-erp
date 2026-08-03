@@ -20,6 +20,7 @@ fun DashboardRoute(
     onStockInClick: () -> Unit,
     onStockOutClick: () -> Unit,
     onMaterialUsageClick: () -> Unit,
+    onViewInventoryClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -36,6 +37,7 @@ fun DashboardRoute(
             onStockOutClick = onStockOutClick,
             onMaterialUsageClick = onMaterialUsageClick,
             onRetryClick = viewModel::retry,
+            onViewInventoryClick = onViewInventoryClick,
             modifier = modifier,
         )
         CurrentUserState.Unauthenticated -> EmptyState(
