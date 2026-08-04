@@ -1,6 +1,6 @@
 # BrandCrafts ERP
 
-[![BrandCrafts ERP mobile app overview](docs/client-screens/brandcrafts-erp-github-banner.png)](docs/client-screens/README.md)
+[![BrandCrafts ERP mobile app overview](./docs/client-screens/brandcrafts-erp-github-banner.png)](./docs/client-screens/README.md)
 
 Mobile ERP for inventory, quotations, invoices, purchase orders, delivery challans, and people operations. The banner uses real application screens; open it to view the complete Light and Dark screenshot gallery.
 
