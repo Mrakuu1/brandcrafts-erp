@@ -1,0 +1,225 @@
+rules_version = '2';
+
+// BrandCrafts ERP client access policy. Deploy this file from the Firebase CLI
+// or paste it into the Firestore Rules editor; Firebase Console/Admin SDK writes
+// intentionally bypass these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isActiveUser() {
+      return signedIn() && currentUser().data.active == true;
+    }
+
+    function isAdmin() {
+      return isActiveUser() && currentUser().data.role == 'ADMIN';
+    }
+
+    function isCustomerContact(data) {
+      return data.type == 'CUSTOMER';
+    }
+
+    function validContact(data) {
+      return data.keys().hasAll([
+        'id', 'type', 'name', 'company', 'phone', 'email', 'address',
+        'gstNumber', 'city', 'state', 'pincode', 'notes', 'active',
+        'createdAt', 'updatedAt', 'createdBy', 'updatedBy'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'type', 'name', 'company', 'phone', 'email', 'address',
+        'gstNumber', 'city', 'state', 'pincode', 'notes', 'active',
+        'createdAt', 'updatedAt', 'createdBy', 'updatedBy'
+      ]) &&
+      data.id is string &&
+      data.type in ['CUSTOMER', 'SUPPLIER'] &&
+      data.name is string && data.name.size() > 0 &&
+      data.phone is string && data.phone.size() > 0 &&
+      data.company is string && data.email is string && data.address is string &&
+      data.gstNumber is string && data.city is string && data.state is string &&
+      data.pincode is string && data.notes is string && data.active is bool;
+    }
+
+    function supportedDocumentType(value) {
+      return value == 'QUOTATION' || value == 'PURCHASE_ORDER';
+    }
+
+    function validInvoiceTransition(before, after) {
+      return before == after ||
+        (before == 'DRAFT' && (after == 'ISSUED' || after == 'CANCELLED')) ||
+        (before == 'ISSUED' && after == 'CANCELLED');
+    }
+
+    function validDeliveryChallanTransition(before, after) {
+      return before == 'DRAFT' &&
+        (after == 'DRAFT' || after == 'DISPATCHED' || after == 'CANCELLED');
+    }
+
+    // Employee Management. Account creation must use a trusted Admin SDK or
+    // Cloud Function; a Firebase Console write also bypasses these rules.
+    match /users/{userId} {
+      allow get: if isActiveUser() && (isAdmin() || request.auth.uid == userId);
+      allow list: if isAdmin();
+      allow create: if false;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // One shared Customer/Supplier collection.
+    match /contacts/{contactId} {
+      allow read: if isActiveUser();
+
+      // Admins may create either type. Employees may create Customers only.
+      allow create: if isActiveUser() &&
+        validContact(request.resource.data) &&
+        request.resource.data.id == contactId &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.updatedBy == request.auth.uid &&
+        (isAdmin() || isCustomerContact(request.resource.data));
+
+      // Employees may edit active Customers but cannot edit Suppliers, switch
+      // type, change creation audit fields, or deactivate a contact.
+      allow update: if isActiveUser() &&
+        validContact(request.resource.data) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.type == resource.data.type &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.updatedBy == request.auth.uid &&
+        (isAdmin() ||
+          (isCustomerContact(resource.data) &&
+            request.resource.data.active == resource.data.active));
+
+      // Contacts use an Admin-only active=false soft-delete policy.
+      allow delete: if false;
+    }
+
+    match /config/company {
+      allow read: if isActiveUser();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // All client-created audit rows identify the calling user and are immutable.
+    match /activity_logs/{activityId} {
+      allow read: if isActiveUser();
+      allow create: if isActiveUser() &&
+        request.resource.data.id == activityId &&
+        request.resource.data.performedBy == request.auth.uid &&
+        request.resource.data.keys().hasAll([
+          'id', 'module', 'action', 'referenceId', 'referenceType',
+          'description', 'performedBy', 'performedByName', 'createdAt'
+        ]);
+      allow update, delete: if false;
+    }
+
+    // Inventory master records and stock movements. Authorization stays in the
+    // repository as well; these rules prevent inactive users from writing.
+    match /materials/{materialId} {
+      allow read: if isActiveUser();
+      allow create, delete: if isAdmin();
+      allow update: if isActiveUser();
+    }
+
+    match /stock_transactions/{transactionId} {
+      allow read: if isActiveUser();
+      allow create: if isActiveUser() &&
+        request.resource.data.id == transactionId &&
+        request.resource.data.performedBy == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Transactional counters used by quotations, purchase orders, invoices,
+    // and delivery challans. Only an Admin may advance a counter.
+    match /counters/{counterId} {
+      allow read, create, update: if isAdmin() &&
+        counterId in ['quotation', 'purchaseOrder', 'invoice', 'deliveryChallan'];
+      allow delete: if false;
+    }
+
+    // Quotations and Purchase Orders share this collection.
+    match /documents/{documentId} {
+      allow read: if isActiveUser();
+      allow create: if isAdmin() &&
+        supportedDocumentType(request.resource.data.type) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isAdmin() &&
+        supportedDocumentType(resource.data.type) &&
+        request.resource.data.type == resource.data.type &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow read: if isActiveUser();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    // Financial invoices. All client write operations are Admin-only; immutable
+    // identifiers and creation audit data cannot be changed after creation.
+    match /invoices/{invoiceId} {
+      allow read: if isActiveUser();
+      allow create: if isAdmin() &&
+        request.resource.data.id == invoiceId &&
+        request.resource.data.status == 'DRAFT' &&
+        request.resource.data.paymentStatus == 'UNPAID' &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isAdmin() &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.invoiceNumber == resource.data.invoiceNumber &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.updatedBy == request.auth.uid &&
+        validInvoiceTransition(resource.data.status, request.resource.data.status);
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow read: if isActiveUser();
+        allow create, update, delete: if isAdmin() &&
+          getAfter(/databases/$(database)/documents/invoices/$(invoiceId)).data.status == 'DRAFT';
+      }
+    }
+
+    // Delivery Challans are non-financial. Only active Admins can create,
+    // edit Drafts, dispatch, or cancel them; their items can change only while
+    // the parent is Draft.
+    match /delivery_challans/{challanId} {
+      allow read: if isActiveUser();
+      allow create: if isAdmin() &&
+        request.resource.data.id == challanId &&
+        request.resource.data.status == 'DRAFT' &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isAdmin() &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.dcNumber == resource.data.dcNumber &&
+        request.resource.data.sourceType == resource.data.sourceType &&
+        request.resource.data.sourceInvoiceId == resource.data.sourceInvoiceId &&
+        request.resource.data.sourceInvoiceNumber == resource.data.sourceInvoiceNumber &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.updatedBy == request.auth.uid &&
+        validDeliveryChallanTransition(resource.data.status, request.resource.data.status);
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow read: if isActiveUser();
+        allow create, update, delete: if isAdmin() &&
+          getAfter(/databases/$(database)/documents/delivery_challans/$(challanId)).data.status == 'DRAFT';
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

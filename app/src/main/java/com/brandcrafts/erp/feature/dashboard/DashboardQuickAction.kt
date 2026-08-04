@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
@@ -135,7 +136,7 @@ private fun DashboardQuickActionEditorSheet(
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                 )
                 IconButton(onClick = onDismissRequest) {
-                    Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.close))
+                    Icon(Icons.Outlined.Cancel, contentDescription = stringResource(R.string.close))
                 }
             }
         },

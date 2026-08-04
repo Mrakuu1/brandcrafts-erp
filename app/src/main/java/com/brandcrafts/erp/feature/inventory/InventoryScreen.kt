@@ -228,17 +228,16 @@ private fun InventoryFilterBottomSheet(selectedFilter: InventoryFilter, onApply:
         containerColor = if (inventoryDark()) Color(0xFF111A25) else Color.White,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(420.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(270.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.dp, inventoryOutline(), RoundedCornerShape(12.dp))
-                    .padding(vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 InventoryFilter.entries.forEach { filter ->
                     val selected = pendingFilter == filter
@@ -246,12 +245,19 @@ private fun InventoryFilterBottomSheet(selectedFilter: InventoryFilter, onApply:
                         text = stringResource(filter.labelRes()),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .height(52.dp)
                             .clip(RoundedCornerShape(9.dp))
-                            .background(if (selected) if (inventoryDark()) Color(0xFF202E3D) else Color(0xFFF7F7F7) else Color.Transparent)
+                            .background(
+                                if (selected) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = if (inventoryDark()) .22f else .10f)
+                                } else {
+                                    Color.Transparent
+                                },
+                            )
                             .clickable { pendingFilter = filter }
-                            .padding(vertical = 18.dp, horizontal = 16.dp),
+                            .padding(horizontal = 16.dp),
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal),
-                        color = if (selected) MaterialTheme.colorScheme.onSurface else inventorySecondary(),
+                        color = if (selected) MaterialTheme.colorScheme.primary else inventorySecondary(),
                         textAlign = TextAlign.Center,
                     )
                 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun DocumentDetailsCard(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(14.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.red < .2f
@@ -39,7 +41,7 @@ fun DocumentDetailsCard(
         shadowElevation = if (dark) 0.dp else 3.dp,
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content,
         )

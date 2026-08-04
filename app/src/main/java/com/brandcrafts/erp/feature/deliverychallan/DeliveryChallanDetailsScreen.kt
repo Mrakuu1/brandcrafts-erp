@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocalShipping
@@ -26,7 +27,6 @@ import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,6 +50,7 @@ import com.brandcrafts.erp.ui.components.AppTopBar
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
+import com.brandcrafts.erp.ui.components.CenteredLoadingOverlay
 import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
 import java.text.DateFormat
@@ -120,8 +121,8 @@ private fun DeliveryChallanDetailsContent(
     onEvent: (DeliveryChallanDetailsUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        if (isOperating || isGeneratingPdf) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 12.dp),
@@ -141,6 +142,8 @@ private fun DeliveryChallanDetailsContent(
             enabled = !isOperating && !isGeneratingPdf,
             onEvent = onEvent,
         )
+    }
+        CenteredLoadingOverlay(visible = isOperating || isGeneratingPdf)
     }
 }
 
@@ -263,7 +266,7 @@ private fun DeliveryChallanDetailsActions(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (canDispatch) DeliveryChallanActionButton(stringResource(R.string.delivery_challan_dispatch), Icons.Outlined.LocalShipping, { onEvent(DeliveryChallanDetailsUiEvent.Dispatch) }, Modifier.weight(1f), enabled, primary = true)
                 if (canEdit) DeliveryChallanActionButton(stringResource(R.string.delivery_challan_edit), Icons.Outlined.Edit, { onEvent(DeliveryChallanDetailsUiEvent.Edit) }, Modifier.weight(1f), enabled)
-                if (canCancel) DeliveryChallanActionButton(stringResource(R.string.delivery_challan_cancel), Icons.Outlined.Close, { onEvent(DeliveryChallanDetailsUiEvent.Cancel) }, Modifier.weight(1f), enabled)
+                if (canCancel) DeliveryChallanActionButton(stringResource(R.string.cancel), Icons.Outlined.Cancel, { onEvent(DeliveryChallanDetailsUiEvent.Cancel) }, Modifier.weight(1f), enabled)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

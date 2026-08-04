@@ -1,5 +1,6 @@
 package com.brandcrafts.erp.feature.invoice
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -264,7 +265,7 @@ private fun InvoiceCustomerSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { message -> { Text(message) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(60.dp),
             shape = MaterialTheme.shapes.small,
             colors = formOutlinedTextFieldColors(),
         )
@@ -293,7 +294,13 @@ private fun InvoiceLineEditor(
     onTaxChanged: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), MaterialTheme.shapes.medium)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         InvoiceMaterialSelector(
             selectedId = line.materialId,
             options = materialOptions,
@@ -386,7 +393,7 @@ private fun InvoiceMaterialSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { message -> { Text(message) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(60.dp),
             shape = MaterialTheme.shapes.small,
             colors = formOutlinedTextFieldColors(),
         )
@@ -441,7 +448,7 @@ private fun InvoiceDateField(
                 }
             }
         },
-        modifier = Modifier.fillMaxWidth().height(56.dp).clickable(enabled = enabled) { showingPicker = true },
+        modifier = Modifier.fillMaxWidth().height(60.dp).clickable(enabled = enabled) { showingPicker = true },
         shape = MaterialTheme.shapes.small,
         colors = formOutlinedTextFieldColors(),
     )

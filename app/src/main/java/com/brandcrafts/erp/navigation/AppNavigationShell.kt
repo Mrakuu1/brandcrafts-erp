@@ -245,6 +245,7 @@ fun AppNavigationShell(
             onConfirm = onLogout,
             onDismiss = { if (!isLogoutInProgress) showLogoutConfirmation = false },
             confirmLoading = isLogoutInProgress,
+            destructive = true,
         )
     }
     LaunchedEffect(logoutErrorMessage) {

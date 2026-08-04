@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -47,6 +46,7 @@ import com.brandcrafts.erp.domain.usecase.quotation.QuotationTotals
 import com.brandcrafts.erp.ui.components.AppTopBar
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
+import com.brandcrafts.erp.ui.components.CenteredLoadingOverlay
 import com.brandcrafts.erp.ui.components.OutlinedButton
 import com.brandcrafts.erp.ui.components.DocumentDetailsCard
 import com.brandcrafts.erp.ui.components.DocumentDetailsSectionTitle
@@ -116,11 +116,11 @@ private fun QuotationDetailsBody(
     onEvent: (QuotationDetailsUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (pdfGenerating) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -145,6 +145,8 @@ private fun QuotationDetailsBody(
             pdfGenerating = pdfGenerating,
             onEvent = onEvent,
         )
+    }
+        CenteredLoadingOverlay(visible = pdfGenerating)
     }
 }
 
@@ -329,7 +331,7 @@ private fun QuotationItemsTable(quotation: Quotation) {
 private fun QuotationTableHeader() {
     Row(modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.quotation_item), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.quotation_quantity), modifier = Modifier.width(42.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+        Text(stringResource(R.string.quotation_pdf_column_quantity), modifier = Modifier.width(42.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
         Text(stringResource(R.string.quotation_unit_price), modifier = Modifier.width(70.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
         Text(stringResource(R.string.quotation_amount), modifier = Modifier.width(72.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
     }

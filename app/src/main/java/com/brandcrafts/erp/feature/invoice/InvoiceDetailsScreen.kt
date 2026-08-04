@@ -24,7 +24,6 @@ import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -59,6 +58,7 @@ import com.brandcrafts.erp.ui.components.AppTopBar
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
+import com.brandcrafts.erp.ui.components.CenteredLoadingOverlay
 import com.brandcrafts.erp.ui.components.StatusChip
 import com.brandcrafts.erp.ui.components.StatusTone
 import com.brandcrafts.erp.ui.components.DocumentDetailsCard
@@ -135,13 +135,11 @@ private fun InvoiceDetailsBody(
 ) {
     val invoice = requireNotNull(state.invoice)
     val operating = state.operationInProgress != null || state.isPdfGenerating
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (operating) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        }
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -165,6 +163,8 @@ private fun InvoiceDetailsBody(
             enabled = !operating,
             onEvent = onEvent,
         )
+    }
+        CenteredLoadingOverlay(visible = operating)
     }
 }
 
@@ -241,7 +241,7 @@ private fun InvoiceDateCard(invoice: InvoiceDetailsModel) {
 private fun InvoiceTableHeader() {
     Row(modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.invoice_item), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.invoice_quantity), modifier = Modifier.width(42.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+        Text(stringResource(R.string.quotation_pdf_column_quantity), modifier = Modifier.width(42.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
         Text(stringResource(R.string.invoice_unit_price), modifier = Modifier.width(70.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
         Text(stringResource(R.string.invoice_amount), modifier = Modifier.width(72.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
     }
@@ -343,32 +343,41 @@ private fun InvoiceDetailsLineCard(line: InvoiceDetailsLine) {
 @Composable
 private fun InvoiceTotalsCard(invoice: InvoiceDetailsModel) {
     val dark = MaterialTheme.colorScheme.background.red < .2f
-    DocumentDetailsCard {
+    DocumentDetailsCard(contentPadding = PaddingValues(0.dp)) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            InvoiceTotalValueRow(R.string.invoice_subtotal, formatInvoiceDetailsCurrency(invoice.subtotal))
-            InvoiceTotalValueRow(R.string.invoice_discount_total, formatInvoiceDetailsCurrency(invoice.discountTotal))
-            InvoiceTotalValueRow(R.string.invoice_tax_total, formatInvoiceDetailsCurrency(invoice.taxTotal))
+            Column(
+                modifier = Modifier.padding(start = 14.dp, top = 14.dp, end = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                InvoiceTotalValueRow(R.string.invoice_subtotal, formatInvoiceDetailsCurrency(invoice.subtotal))
+                InvoiceTotalValueRow(R.string.invoice_discount_total, formatInvoiceDetailsCurrency(invoice.discountTotal))
+                InvoiceTotalValueRow(R.string.invoice_tax_total, formatInvoiceDetailsCurrency(invoice.taxTotal))
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(6.dp))
                     .background(if (dark) Color(0xFF3A1A0C) else Color(0xFFFFEEE2))
-                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                    .padding(horizontal = 14.dp, vertical = 5.dp),
             ) {
                 InvoiceEmphasizedValueRow(R.string.invoice_grand_total, formatInvoiceDetailsCurrency(invoice.grandTotal), Color(0xFFFF6500))
             }
-            InvoiceTotalValueRow(
-                R.string.invoice_paid_amount,
-                formatInvoiceDetailsCurrency(invoice.paidAmount),
-                valueColor = Color(0xFF159447),
-            )
-            InvoiceTotalValueRow(
-                R.string.invoice_outstanding_amount,
-                formatInvoiceDetailsCurrency(invoice.outstandingAmount),
-            )
+            Column(
+                modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                InvoiceTotalValueRow(
+                    R.string.invoice_paid_amount,
+                    formatInvoiceDetailsCurrency(invoice.paidAmount),
+                    valueColor = Color(0xFF159447),
+                )
+                InvoiceTotalValueRow(
+                    R.string.invoice_outstanding_amount,
+                    formatInvoiceDetailsCurrency(invoice.outstandingAmount),
+                )
+            }
         }
     }
 }

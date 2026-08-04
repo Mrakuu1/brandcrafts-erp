@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -266,7 +267,7 @@ private fun DeliveryChallanCard(
                 buildList {
                     if (row.canEdit) add(OrdersCardAction(stringResource(R.string.delivery_challan_edit), Icons.Outlined.Edit, onEdit))
                     if (row.canDispatch) add(OrdersCardAction(stringResource(R.string.delivery_challan_dispatch), Icons.Outlined.Edit, onDispatch))
-                    if (row.canCancel) add(OrdersCardAction(stringResource(R.string.delivery_challan_cancel), Icons.Outlined.Edit, onCancel))
+                    if (row.canCancel) add(OrdersCardAction(stringResource(R.string.cancel), Icons.Outlined.Cancel, onCancel))
                 },
             )
         }

@@ -527,6 +527,11 @@ private fun PeopleFilterSheet(
                         .fillMaxWidth()
                         .height(52.dp)
                         .clip(RoundedCornerShape(12.dp))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline.copy(alpha = if (peopleDark()) .70f else .45f),
+                            RoundedCornerShape(12.dp),
+                        )
                         .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = if (peopleDark()) .22f else .1f) else Color.Transparent)
                         .clickable { pending = filter },
                     contentAlignment = Alignment.Center,

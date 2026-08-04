@@ -187,7 +187,7 @@ fun QuotationCustomerSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { { Text(it) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(60.dp),
             shape = MaterialTheme.shapes.small,
             colors = formOutlinedTextFieldColors(),
         )
@@ -228,7 +228,7 @@ fun QuotationInventorySelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { { Text(it) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(60.dp),
             shape = MaterialTheme.shapes.small,
             colors = formOutlinedTextFieldColors(),
         )
@@ -267,7 +267,7 @@ private fun QuotationDateSelector(
         isError = errorMessage != null,
         supportingText = errorMessage?.let { { Text(it) } },
         trailingIcon = { androidx.compose.material3.IconButton(onClick = { showingPicker = true }, enabled = enabled) { androidx.compose.material3.Icon(Icons.Outlined.CalendarToday, stringResource(R.string.quotation_select_valid_until)) } },
-        modifier = Modifier.fillMaxWidth().height(56.dp).clickable(enabled = enabled) { showingPicker = true },
+        modifier = Modifier.fillMaxWidth().height(60.dp).clickable(enabled = enabled) { showingPicker = true },
         shape = MaterialTheme.shapes.small,
         colors = formOutlinedTextFieldColors(),
     )

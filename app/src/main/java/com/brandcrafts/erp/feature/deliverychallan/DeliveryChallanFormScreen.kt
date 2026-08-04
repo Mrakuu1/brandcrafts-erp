@@ -1,5 +1,6 @@
 package com.brandcrafts.erp.feature.deliverychallan
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -233,7 +234,7 @@ private fun DeliveryChallanCustomerSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { value -> { Text(value) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(60.dp),
             shape = MaterialTheme.shapes.small,
             colors = formOutlinedTextFieldColors(),
         )
@@ -268,7 +269,13 @@ private fun DeliveryChallanLineEditor(
     onUnitChanged: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), MaterialTheme.shapes.medium)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         if (!isImported) {
             DeliveryChallanMaterialSelector(
                 selectedId = line.materialId,
@@ -333,7 +340,7 @@ private fun DeliveryChallanMaterialSelector(
             isError = errorMessage != null,
             supportingText = errorMessage?.let { value -> { Text(value) } },
             trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().height(56.dp),
+            modifier = Modifier.menuAnchor().fillMaxWidth().height(60.dp),
             shape = MaterialTheme.shapes.small,
             colors = formOutlinedTextFieldColors(),
         )
@@ -385,7 +392,7 @@ private fun DeliveryChallanDateField(
                 Icon(Icons.Outlined.CalendarToday, contentDescription = label)
             }
         },
-        modifier = Modifier.fillMaxWidth().height(56.dp).clickable(enabled = enabled) { showPicker = true },
+        modifier = Modifier.fillMaxWidth().height(60.dp).clickable(enabled = enabled) { showPicker = true },
         shape = MaterialTheme.shapes.small,
         colors = formOutlinedTextFieldColors(),
     )

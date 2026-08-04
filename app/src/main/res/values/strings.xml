@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Brand Crafts ERP</string>
     <string name="nav_home">Home</string>
-    <string name="nav_stock">Stock</string>
+    <string name="nav_inventory">Inventory</string>
     <string name="nav_orders">Orders</string>
     <string name="nav_contacts">People</string>
     <string name="profile">Profile</string>
@@ -515,6 +515,8 @@
     <string name="invoice_payment_status_unpaid">Unpaid</string>
     <string name="invoice_payment_status_partially_paid">Partially paid</string>
     <string name="invoice_payment_status_paid">Paid</string>
+    <string name="invoice_filter_document_status">Invoice status</string>
+    <string name="invoice_filter_payment_status">Payment status</string>
     <string name="invoice_overdue">Overdue</string>
     <string name="invoice_loading">Loading invoices</string>
     <string name="invoice_empty">No invoices yet</string>

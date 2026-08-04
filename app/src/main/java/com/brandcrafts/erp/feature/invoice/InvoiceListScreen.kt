@@ -143,14 +143,26 @@ fun InvoiceListScreen(
                 filtersOpen = false
             },
         ) {
-            InvoiceDocumentStatusFilters(
-                selected = pendingDocumentStatus,
-                onSelected = { pendingDocumentStatus = it },
-            )
-            InvoicePaymentStatusFilters(
-                selected = pendingPaymentStatus,
-                onSelected = { pendingPaymentStatus = it },
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.invoice_filter_document_status),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                InvoiceDocumentStatusFilters(
+                    selected = pendingDocumentStatus,
+                    onSelected = { pendingDocumentStatus = it },
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.invoice_filter_payment_status),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                InvoicePaymentStatusFilters(
+                    selected = pendingPaymentStatus,
+                    onSelected = { pendingPaymentStatus = it },
+                )
+            }
         }
     }
 }

@@ -5,6 +5,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -12,14 +20,22 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.delay
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -37,7 +53,6 @@ import com.brandcrafts.erp.feature.contacts.ContactsRoute
 import com.brandcrafts.erp.feature.contacts.ContactFormMode
 import com.brandcrafts.erp.feature.contacts.ContactFormRoute
 import com.brandcrafts.erp.feature.contacts.PeopleTab
-import com.brandcrafts.erp.feature.quotation.QuotationRoute
 import com.brandcrafts.erp.feature.quotation.QuotationDetailsRoute
 import com.brandcrafts.erp.feature.quotation.QuotationFormRoute
 import com.brandcrafts.erp.feature.purchaseorder.OrdersRoute
@@ -55,7 +70,6 @@ import com.brandcrafts.erp.feature.inventory.StockInRoute
 import com.brandcrafts.erp.feature.inventory.StockOutRoute
 import com.brandcrafts.erp.ui.CurrentUserProvider
 import com.brandcrafts.erp.ui.components.ErrorState
-import com.brandcrafts.erp.ui.components.LoadingView
 import com.brandcrafts.erp.ui.theme.BrandMotion
 import kotlinx.coroutines.launch
 
@@ -90,7 +104,7 @@ private const val DELIVERY_CHALLAN_DETAILS_ROUTE = "deliverychallans/details/{ch
 private val formDialogProperties = DialogProperties(usePlatformDefaultWidth = false)
 
 enum class AppDestination(val route: String, val titleRes: Int) {
-    HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_stock),
+    HOME("home", R.string.nav_home), STOCK("stock", R.string.nav_inventory),
     ORDERS("orders", R.string.nav_orders), CONTACTS("contacts", R.string.nav_contacts),
     PROFILE("profile", R.string.profile), EMPLOYEES("employees", R.string.employee_management),
     SETTINGS("settings", R.string.business_settings),
@@ -104,6 +118,11 @@ fun AppNavHost(
     val state by startupViewModel.uiState.collectAsStateWithLifecycle()
     val currentUser by startupViewModel.currentUser.collectAsStateWithLifecycle()
     val logoutState by startupViewModel.logoutUiState.collectAsStateWithLifecycle()
+    var showSplash by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(1_200)
+        showSplash = false
+    }
     val logoutErrorMessage = logoutState.error?.let { error ->
         stringResource(
             if (error == AuthenticationError.NETWORK_UNAVAILABLE) {
@@ -115,7 +134,9 @@ fun AppNavHost(
     }
 
     CurrentUserProvider(currentUser = currentUser) {
-        when (val startupState = state) {
+        if (showSplash) {
+            StartupLoading(modifier)
+        } else when (val startupState = state) {
             StartupUiState.Loading -> StartupLoading(modifier)
             is StartupUiState.RecoverableError -> StartupError(
                 error = startupState.error,
@@ -550,8 +571,48 @@ private fun deliveryChallanCreateFromInvoiceRoute(invoiceId: String): String =
 
 @Composable
 private fun StartupLoading(modifier: Modifier) {
+    val transition = rememberInfiniteTransition(label = "startupSplash")
+    val logoScale by transition.animateFloat(
+        initialValue = .82f,
+        targetValue = 1.10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(620, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "startupLogoScale",
+    )
+    val logoAlpha by transition.animateFloat(
+        initialValue = .45f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(620, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "startupLogoAlpha",
+    )
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        LoadingView(message = stringResource(R.string.startup_loading))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            androidx.compose.foundation.Image(
+                painter = painterResource(R.drawable.app_logo),
+                contentDescription = stringResource(R.string.login_brand_name),
+                modifier = Modifier
+                    .size(116.dp)
+                    .graphicsLayer { alpha = logoAlpha }
+                    .scale(logoScale),
+            )
+            Text(
+                text = stringResource(R.string.login_brand_name),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            CircularProgressIndicator(
+                modifier = Modifier.size(28.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 3.dp,
+            )
+        }
     }
 }
 

@@ -405,6 +405,11 @@ fun OrdersFilterChoiceList(
                     .fillMaxWidth()
                     .heightIn(min = 52.dp)
                     .clip(RoundedCornerShape(12.dp))
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = if (ordersDark()) .70f else .45f),
+                        RoundedCornerShape(12.dp),
+                    )
                     .background(if (choice.selected) MaterialTheme.colorScheme.primary.copy(alpha = if (ordersDark()) .22f else .1f) else Color.Transparent)
                     .clickable(onClick = choice.onSelected)
                     .padding(horizontal = 16.dp),

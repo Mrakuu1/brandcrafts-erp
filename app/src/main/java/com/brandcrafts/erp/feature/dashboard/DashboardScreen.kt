@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Info
@@ -381,7 +382,7 @@ private fun DashboardSnapshotDialog(metrics: AdminDashboardMetrics, onDismissReq
                     color = MaterialTheme.colorScheme.primary,
                 )
                 IconButton(onClick = onDismissRequest) {
-                    Icon(Icons.Outlined.Close, stringResource(R.string.close))
+                    Icon(Icons.Outlined.Cancel, stringResource(R.string.close))
                 }
             }
         },

@@ -32,7 +32,7 @@ fun BrandDialog(
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true),
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth().padding(BrandSpacing.Xl),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surface.copy(alpha = BrandVisualTokens.OverlaySurfaceAlpha),
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -41,7 +41,7 @@ fun BrandDialog(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = BrandVisualTokens.LightBorderAlpha)),
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(BrandSpacing.Xl),
+                modifier = Modifier.fillMaxWidth().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(BrandSpacing.Md),
             ) {
                 Text(text = title, style = MaterialTheme.typography.titleLarge)

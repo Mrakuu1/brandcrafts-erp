@@ -1,5 +1,6 @@
 package com.brandcrafts.erp.feature.quotation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,10 @@ fun QuotationLineEditor(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = if (MaterialTheme.colorScheme.background.red < .2f) .75f else .55f),
+        ),
         colors = CardDefaults.cardColors(
             containerColor = if (MaterialTheme.colorScheme.background.red < .2f) {
                 Color(0xFF16212E)

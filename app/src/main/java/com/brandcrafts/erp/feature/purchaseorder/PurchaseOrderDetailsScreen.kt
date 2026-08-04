@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
@@ -26,7 +27,6 @@ import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,6 +50,7 @@ import com.brandcrafts.erp.ui.components.AppTopBar
 import com.brandcrafts.erp.ui.components.EmptyState
 import com.brandcrafts.erp.ui.components.ErrorState
 import com.brandcrafts.erp.ui.components.LoadingView
+import com.brandcrafts.erp.ui.components.CenteredLoadingOverlay
 import java.math.BigDecimal
 import java.text.DateFormat
 import java.util.Date
@@ -110,10 +111,8 @@ private fun PurchaseOrderDetailsContent(
 ) {
     val details = requireNotNull(state.details)
     val operationInProgress = state.approving || state.cancelling || state.pdfGenerating
-    Column(modifier = modifier.fillMaxSize()) {
-        if (operationInProgress || state.loading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        }
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         if (state.error) PurchaseOrderDetailsInlineError { onEvent(PurchaseOrderDetailsUiEvent.Retry) }
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -142,6 +141,8 @@ private fun PurchaseOrderDetailsContent(
             enabled = !operationInProgress && !state.loading,
             onEvent = onEvent,
         )
+    }
+        CenteredLoadingOverlay(visible = operationInProgress || state.loading)
     }
 }
 
@@ -384,7 +385,7 @@ private fun PurchaseOrderDetailsActions(
                 if (details.canCancel) {
                     PurchaseOrderActionButton(
                         text = stringResource(R.string.purchase_order_cancel),
-                        icon = Icons.Outlined.Close,
+                        icon = Icons.Outlined.Cancel,
                         onClick = { onEvent(PurchaseOrderDetailsUiEvent.CancelClicked) },
                         modifier = Modifier.weight(1f),
                         enabled = enabled,
